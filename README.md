@@ -1,4 +1,4 @@
-METsteps Tutorial
+Model Evaluation Tool steps: A package for simplifying the process of water balance component product evaluation.
 ================
 Samuel Saxe
 April 28, 2017
