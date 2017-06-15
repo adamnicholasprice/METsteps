@@ -1,7 +1,7 @@
-Model Evaluation Tool steps: A package for simplifying the process of water balance component product evaluation.
+METsteps Tutorial
 ================
 Samuel Saxe
-May 26, 2017
+June 15, 2017
 
 Introduction
 ------------
@@ -21,10 +21,24 @@ This workflow is significantly impacted by the power of the user's machine, so t
 Step 1: Installing package
 --------------------------
 
-Since you're probably installing from within a USGS system and because the package is hosted on Github, you can't use the usual **devtools::install\_github(**'ssaxe-usgs/METsteps' **)** function. Instead, you will have to download the package at <https://github.com/ssaxe-usgs/METsteps>, click on the green 'Clone or download' dropdown button, and click download ZIP. Then, install the package using:
+Since you're probably installing from within a USGS system and because the package is hosted on Github, when you use **devtools::install\_github(**'ssaxe-usgs/METsteps' **)** function to install the package, you will hit an SSH license error. To get around this, you'll have to temporarily disable these permissions and then IMMEDIATELY reenable so you don't download suspicious packages in the future:
 
 ``` r
-install.packages('C:/User/Downloads/METsteps.zip')
+# This will install the required packages if not already available
+if (!('httr' %in% installed.packages()[,1])) install.packages('httr')
+if (!('curl' %in% installed.packages()[,1])) install.packages('curl')
+if (!('devtools' %in% installed.packages()[,1])) install.packages('devtools')
+
+# Disable SSH
+library(httr)
+library(curl)
+httr::set_config(config(ssl_verifypeer = 0L))
+
+# Install METsteps from Github
+devtools::install_github('ssaxe/METsteps')
+
+# Immediately undo SSH disabling by reseting R
+.rs.restartR()
 ```
 
 Don't forget to use forward slashes or double backslashes in your directory path.
@@ -43,8 +57,13 @@ library('METsteps')
 One more difference between the **library()** and **require()** functions is that **require()** is significantly faster. Normally this doesn't matter but when loading a package within a function that will be iterated thousands or millions of times, shaving off microseconds is important. To wit:
 
 ``` r
-library('microbenchmark')
-library('ggplot2')
+# If not already installed...
+if (!('microbenchmark' %in% installed.packages()[,1])) install.packages('microbenchmark')
+if (!('ggplot2' %in% installed.packages()[,1])) install.packages('ggplot2')
+
+# Load
+library(microbenchmark)
+library(ggplot2)
 st <- microbenchmark::microbenchmark('require(x)' = require(ggplot2),
                                      'library(x)' = library(ggplot2))
 ggplot2::autoplot(st)
@@ -52,7 +71,7 @@ ggplot2::autoplot(st)
 
 ![](README_files/figure-markdown_github/speedtest-1.png)
 
-One more quick note: The '::' syntax directs R to load a function from a specified package. I prefer using this when writing up scripts I'll be using often, as functions from different packages can have the same name and the '::' syntax reduces errors.
+One more quick note: The '::' syntax directs R to load a function from a specified package. I prefer using this when writing scripts I'll be using often, as functions from different packages can have the same name and the '::' syntax reduces errors.
 
 Step 3: Creating a parallel cluster object
 ------------------------------------------
@@ -60,7 +79,11 @@ Step 3: Creating a parallel cluster object
 Now that you've imported *METsteps*, you'll need one more package: *parallel*. This allows your computer to process datasets in parallels across multiple cores, yielding significant speed increases.
 
 ``` r
-library('parallel')
+# If not already installed...
+if (!('parallel' %in% installed.packages()[,1])) install.packages('parallel')
+
+#Load package
+library(parallel)
 ```
 
 We will want to initiate what's called a cluster, that directs R to create environments on multiple nodes. To see how many cores your computer has, use:
