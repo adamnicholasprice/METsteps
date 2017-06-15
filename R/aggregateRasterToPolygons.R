@@ -36,7 +36,8 @@
 #' 4 > average size of polygons in shapefile.
 #' @param cancelReproject Logical; If FALSE, reprojection is forced if necessary.  Set to TRUE to disable raster reprojection.
 #' Defaults to FALSE. Suggested for use when WGS84 is projection and extents align with included datasets (polyHUC2 for example).
-#' @param projManual Character, optional; Projection for datasets.  Gridded data and shapefile projections will be
+#' @param recursive Logical; Should the listing recurse into directories? Defaults to TRUE.
+#' @param projManual Character, optional; Projection for datasets to be converted to.  Gridded data and shapefile projections will be
 #' transformed to projManual as necessary. For CONUS projects, suggested to leave at default. Defaults to NAD83 
 #' ('+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0').
 #' @export
@@ -64,6 +65,7 @@ aggregateRasterToPolygons <- function(dataPath,
                                 cl = NULL,
                                 disag = TRUE,
                                 cancelReproject = FALSE,
+                                recursive = TRUE,
                                 projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'){
   
   # dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/AET/MOD16_A2/"
@@ -130,6 +132,8 @@ aggregateRasterToPolygons <- function(dataPath,
   
   stopifnot(timeStep %in% c('day', 'week', 'month', 'quarter', 'year'))
   
+  if (grepl('_', dataName, fixed = T)){stop('Can not have an underscore (_) in dataName. Please use a dash (-) instead.')}
+  
   xrm = lapply(X <- c(dataPath, dataExtension, dataName, dataCategory, startDate, timeStep, aggFUN,
                       MET.HUC10, polyFname, polyLayer, maxLayers, cushion, verbose),
                FUN = function(y){
@@ -170,12 +174,13 @@ aggregateRasterToPolygons <- function(dataPath,
   if (verbose) writeLines('Identifying gridded datasets')
   D.names <- list.files(path       = dataPath,
                        pattern     = paste0('\\.', gsub('.', '', dataExtension, fixed = T), '$'),
-                       full.names  = TRUE)
+                       full.names  = TRUE,
+                       recursive = recursive)
   if (verbose) writeLines(paste0('Found ', length(D.names), ' unique .', dataExtension, ' files in dataPath'))
-  D.proj = projection(suppressWarnings(raster(D.names[1])))
+  D.proj <- projection(suppressWarnings(raster(D.names[1])))
   if (is.na(D.proj)) stop('No coordinate reference system associated with rasters.')
   # Retrieve datum of dataset projection
-  .br <- unlist(strsplit(x     = projection(D.proj),
+  .br <- unlist(strsplit(x     = D.proj,
                          split = ' ',
                          fixed = T))
   .br <- .br[grepl(pattern = '+datum',
