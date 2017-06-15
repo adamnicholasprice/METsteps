@@ -3,8 +3,8 @@ Title: Aggregate Data to the HUC 2-10 Levels (one line, title case)
 Version: 0.0.0.9000
 Authors@R: person("Samuel", "Saxe", email = "ssaxe@usgs.gov", role = c("aut", "cre"))
 Description: The METsteps package provides functions to streamline the processing of gridded datasets in parallels through the 'sp', 'rgdal', 'raster', 'gdalUtils', and 'velox' packages.  The 'velox' package is key in extracting cells by polygon, in that it operates ~150x faster than the 'raster' package and ~4x faster than the python 'rasterstats' module, though it is affected by the effects of in-memory processing.
-Depends: R (>= 3.3.2)
-Imports: dplyr, feather, gdalUtils, hydroGOF, leaflet, lubridate, maptools, parallel, pbapply, raster, rgdal (>= 1.2-6), scales, shiny (>= 1.0.3), shinydashboard, sp, stats, stringr, velox, viridis, zoo
+Depends: R (>= 3.1.0)
+Imports: dplyr, feather, gdalUtils, hydroGOF, leaflet, lubridate, maptools, ncdf4, parallel, pbapply, progress, raster, rgdal (>= 1.2-6), scales, shiny (>= 1.0.3), shinydashboard, sp, stats, stringr, velox, viridis, zoo
 License: CC0
 Encoding: UTF-8
 LazyData: true
