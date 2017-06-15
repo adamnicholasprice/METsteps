@@ -35,7 +35,7 @@ library(curl)
 httr::set_config(config(ssl_verifypeer = 0L))
 
 # Install METsteps from Github
-devtools::install_github('ssaxe/METsteps')
+devtools::install_github('ssaxe-usgs/METsteps')
 
 # Immediately undo SSH disabling by reseting R
 .rs.restartR()
