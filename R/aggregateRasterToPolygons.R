@@ -189,11 +189,16 @@ aggregateRasterToPolygons <- function(dataPath,
   .br <- (unlist(strsplit(x     = .br,
                          split = '=',
                          fixed = T)))[2]
-  if (.br == 'WGS84' && projManual == "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0") {
-    warning(paste('Projection of', dataName, 'has datum of WGS84. Transformation of this datum to NAD83 is implemented incorrectly in GDAL. Please convert projection to GCS_NAD83 in ArcGIS, QGIS, or other GIS software.'))
-  } else if (.br == 'WGS84'){
+  if (length(.br) > 0){
+    if (.br == 'WGS84' && projManual == "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0") {
+      warning(paste('Projection of', dataName, 'has datum of WGS84. Transformation of this datum to NAD83 is implemented incorrectly in GDAL. Please convert projection to GCS_NAD83 in ArcGIS, QGIS, or other GIS software.'))
+    } else if (.br == 'WGS84'){
       warning(paste('Projection of', dataName, 'has datum of WGS84.  If your dataset requires a transformation, GDAL does not correctly transform the WGS84 datum to other GCS projections and will result in NA values.  Please convert projection in ArcGIS, QGIS, or other GIS software.'))
+    }
+  }else{
+    warning('No datum information (+datum) in projection of dataset.')
   }
+  
   
   # Produce time series for raster
   LayersPerFile <- suppressWarnings(nlayers(stack(D.names[1])))
