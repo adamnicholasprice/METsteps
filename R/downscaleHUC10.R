@@ -24,11 +24,16 @@ downscaleHUC10 <- function(HUC10monthly){
       # HUC8.info <- METsteps::HUC_IDs$HUC8.info
       # HUC10.info <- METsteps::HUC_IDs$HUC10.info
   
-  HUC2.info <- sort(as.numeric(METsteps::HUC_IDs$HUC2.info))
-  HUC4.info <- sort(as.numeric(METsteps::HUC_IDs$HUC4.info))
-  HUC6.info <- sort(as.numeric(METsteps::HUC_IDs$HUC6.info))
-  HUC8.info <- sort(as.numeric(METsteps::HUC_IDs$HUC8.info))
-  HUC10.info <- sort(as.numeric(METsteps::HUC_IDs$HUC10.info))
+  # HUC2.info <- sort(as.numeric(METsteps::HUC_IDs$HUC2.info))
+  # HUC4.info <- sort(as.numeric(METsteps::HUC_IDs$HUC4.info))
+  # HUC6.info <- sort(as.numeric(METsteps::HUC_IDs$HUC6.info))
+  # HUC8.info <- sort(as.numeric(METsteps::HUC_IDs$HUC8.info))
+  # HUC10.info <- sort(as.numeric(METsteps::HUC_IDs$HUC10.info))
+  HUC2.info <- sort((METsteps::HUC_IDs$HUC2.info))
+  HUC4.info <- sort((METsteps::HUC_IDs$HUC4.info))
+  HUC6.info <- sort((METsteps::HUC_IDs$HUC6.info))
+  HUC8.info <- sort((METsteps::HUC_IDs$HUC8.info))
+  HUC10.info <- sort((METsteps::HUC_IDs$HUC10.info))
 
   #---- Data
   HUC10.data <- HUC10monthly$HUC10matrix
@@ -134,7 +139,9 @@ downscaleHUC10 <- function(HUC10monthly){
             as.numeric(colSums(weighted.data, na.rm = T)))
         }else{
           return(
-            as.numeric(weighted.data))
+            #as.numeric(weighted.data)
+            mean(as.numeric(weighted.data), na.rm = T)
+            )
         }
       }
       
