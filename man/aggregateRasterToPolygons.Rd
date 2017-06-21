@@ -8,7 +8,7 @@ aggregateRasterToPolygons(dataPath, dataName, dataExtension, dataCategory,
   startDate, timeStep, unitDepth = "mm", aggFUN = "mean",
   MET.HUC10 = TRUE, polyFname = NULL, polyLayer = NULL, polyIDs = NULL,
   maxLayers = 6, cushion = 3, verbose = TRUE, cl = NULL, disag = TRUE,
-  cancelReproject = FALSE,
+  cancelReproject = FALSE, recursive = TRUE,
   projManual = "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
 }
 \arguments{
@@ -61,7 +61,9 @@ to TRUE.}
 \item{cancelReproject}{Logical; If FALSE, reprojection is forced if necessary.  Set to TRUE to disable raster reprojection.
 Defaults to FALSE. Suggested for use when WGS84 is projection and extents align with included datasets (polyHUC2 for example).}
 
-\item{projManual}{Character, optional; Projection for datasets.  Gridded data and shapefile projections will be
+\item{recursive}{Logical; Should the listing recurse into directories? Defaults to TRUE.}
+
+\item{projManual}{Character, optional; Projection for datasets to be converted to.  Gridded data and shapefile projections will be
 transformed to projManual as necessary. For CONUS projects, suggested to leave at default. Defaults to NAD83 
 ('+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0').}
 }

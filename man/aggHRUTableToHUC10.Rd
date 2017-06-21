@@ -27,8 +27,7 @@ Table of HUC-10 means by HUC.  Time-step x HUC-10.
 }
 \description{
 This function aggregates HRU values in table format to HUC-10 values.  It produces the same list output as the 
-agg_Raster_to_HUC10 function and output can be fed directly into the downscale_HUC10 function.
-Currently requires the following packages: ___.
+aggregateRasterToPolygons() function and output can be fed directly into the downscaleHUC10 function.
 }
 \examples{
 aggHRUTableToHUC10()

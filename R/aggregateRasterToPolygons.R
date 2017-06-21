@@ -180,26 +180,27 @@ aggregateRasterToPolygons <- function(dataPath,
   D.proj <- projection(suppressWarnings(raster(D.names[1])))
   if (is.na(D.proj)) stop('No coordinate reference system associated with rasters.')
   # Retrieve datum of dataset projection
-  .br <- unlist(strsplit(x     = D.proj,
-                         split = ' ',
-                         fixed = T))
-  .br <- .br[grepl(pattern = '+datum',
-                   x       = .br,
-                   fixed   = T)]
-  .br <- (unlist(strsplit(x     = .br,
-                         split = '=',
-                         fixed = T)))[2]
-  if (length(.br) > 0){
-    if (.br == 'WGS84' && projManual == "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0") {
-      warning(paste('Projection of', dataName, 'has datum of WGS84. Transformation of this datum to NAD83 is implemented incorrectly in GDAL. Please convert projection to GCS_NAD83 in ArcGIS, QGIS, or other GIS software.'))
-    } else if (.br == 'WGS84'){
-      warning(paste('Projection of', dataName, 'has datum of WGS84.  If your dataset requires a transformation, GDAL does not correctly transform the WGS84 datum to other GCS projections and will result in NA values.  Please convert projection in ArcGIS, QGIS, or other GIS software.'))
+  if (!cancelReproject){
+    .br <- unlist(strsplit(x     = D.proj,
+                           split = ' ',
+                           fixed = T))
+    .br <- .br[grepl(pattern = '+datum',
+                     x       = .br,
+                     fixed   = T)]
+    .br <- (unlist(strsplit(x     = .br,
+                            split = '=',
+                            fixed = T)))[2]
+    if (length(.br) > 0){
+      if (.br == 'WGS84' && projManual == "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0") {
+        warning(paste('Projection of', dataName, 'has datum of WGS84. Transformation of this datum to NAD83 is implemented incorrectly in GDAL. Please convert projection to GCS_NAD83 in ArcGIS, QGIS, or other GIS software.'))
+      } else if (.br == 'WGS84'){
+        warning(paste('Projection of', dataName, 'has datum of WGS84.  If your dataset requires a transformation, GDAL does not correctly transform the WGS84 datum to other GCS projections and will result in NA values.  Please convert projection in ArcGIS, QGIS, or other GIS software.'))
+      }
+    }else{
+      warning('No datum information (+datum) in projection of dataset.')
     }
-  }else{
-    warning('No datum information (+datum) in projection of dataset.')
   }
-  
-  
+
   # Produce time series for raster
   LayersPerFile <- suppressWarnings(nlayers(stack(D.names[1])))
   TotalFiles <- length(D.names)
@@ -226,7 +227,7 @@ aggregateRasterToPolygons <- function(dataPath,
   
   if (cancelReproject == FALSE){
     if (verbose) writeLines('Reprojecting as necessary')
-    applyWarp3 <- function(fnameList, desiredProjection, dataPath){
+    applyWarp3 <- function(fnameList, desiredProjection, dataPath, assignProj){
       # Wrapper for applyWarp function to be used in parallel lapply function.
       #
       # Args:
@@ -235,7 +236,7 @@ aggregateRasterToPolygons <- function(dataPath,
       #
       # Returns:
       #   List of lists of reprojected rasterStacks.
-      applyWarp <- function(fnameSingle, desiredProjection, dataPath){
+      applyWarp <- function(fnameSingle, desiredProjection, dataPath, assignProj){
         # Wrapper for gdalUtils::gdalwarp function to be used in applyWarp3 lapply function.
         #
         # Args:
@@ -250,9 +251,14 @@ aggregateRasterToPolygons <- function(dataPath,
         dstfile <- tempfile(tmpdir = dataPath, fileext = '.tif')
         # dstfile <- gsub('\\', '', dstfile, fixed = T)
         file.create(dstfile)
+        if (is.null(assignProj)){
+          gdalSourceProj <- projection(raster(fnameSingle))
+        }else{
+          gdalSourceProj <- assignProj
+        }
         ras <- gdalUtils::gdalwarp(srcfile       = fnameSingle,
                                    dstfile       = dstfile,
-                                   s_srs         = projection(raster(fnameSingle)),
+                                   s_srs         = gdalSourceProj,
                                    t_srs         = desiredProjection,
                                    output_Raster = FALSE,
                                    overwrite     = TRUE,

@@ -22,7 +22,7 @@ server <- function(input, output){
     }else if (length(input$data_select) == 2){
       selectInput(inputId = 'stat_select',
                   label   = 'Select Statistic:',
-                  choices = list('NSE' = 'NSE', 'RMSE' = 'RMSE', 'PBIAS' = 'PBIAS', 'DIFFERENCE' = 'DIF',
+                  choices = list('Difference' = 'DIF', 'NSE' = 'NSE', 'RMSE' = 'RMSE', 'PBIAS' = 'PBIAS',
                                  'Cor - Kendall' = 'COR.K', 'Cor - Spearman' = 'COR.S', 'Peak Timing' = 'PEAK',
                                  'Ks test' = 'KS'))
     }else{
@@ -289,6 +289,8 @@ server <- function(input, output){
     dnames    <<- input$data_select
     # Selected HUC region
     maphuc    <<- input$map_HUC_select
+    # Selected timestep
+    timeStep  <<- input$tstep_select
     # Selected statistic
     stat      <<- input$stat_select
     # Selected color scheme
@@ -305,6 +307,7 @@ server <- function(input, output){
       #Subset metadata to current file
       info.cur        <- fileInfo[fileInfo$HUC == maphuc,]
       info.cur        <- info.cur[info.cur$dataName == dnames[i],]
+      info.cur        <- info.cur[info.cur$timeStep == timeStep,]
       #File name
       fname.cur       <- info.cur$fnames
       #Import file
@@ -478,8 +481,13 @@ server <- function(input, output){
                    error = function(e) FALSE)
         })
       }
-      colVec <- c(input$minCol, input$midCol, input$maxCol)
-      if (sum(areColors(colVec)) < 3){
+      if (length(input$midcol) == 1){
+        colVec <- c(input$minCol, input$midCol, input$maxCol)
+      }else{
+        colVec <- c(input$minCol, input$maxCol)
+      }
+      
+      if (sum(areColors(colVec)) != length(colVec)){
         output$colorError  <- renderText({paste0('Manually selected color(s) ',
                                                  paste(colVec[which(areColors(colVec) == FALSE)], collapse = ', '),
                                                  ' are not recognized by R'
@@ -589,7 +597,7 @@ server <- function(input, output){
                                                 nrow = length(subToHUC[[1]])))
           subToHUC[is.infinite(subToHUC)] <- NA
           index(subToHUC) <- presIndex
-          
+          colnames(subToHUC) <- dnames
           
           #Generate ET plot
           #cbPalette <- c("#56B4E9", "#F0E442", "#CC79A7", "#0072B2", "#D55E00")
@@ -730,11 +738,19 @@ server <- function(input, output){
                              length = length(dnames))
           for (i in 1:length(dnames)){
             #Subset info
-            fnames.sub         <- fileInfo %>%
-              dplyr::filter(dataName == dnames[i]) %>%
-              dplyr::filter(HUC      == as.numeric(input$HUC_select))
+                # fnames.sub         <- fileInfo %>%
+                #   dplyr::filter(dataName == dnames[i]) %>%
+                #   dplyr::filter(HUC      == as.numeric(input$HUC_select)) %>%
+                #   dplyr::filter(timeStep == timeStep) %>%
+                #   distinct(fnames)
+                # yfun <- function(x){
+                #   fileInfo$fnames[(fileInfo$dataName == dnames[i] & fileInfo$HUC == 8 & fileInfo$timeStep == timeStep)]}
+                # 
+            fnames.sub <- fileInfo[(fileInfo$dataName == dnames[i] & fileInfo$HUC == as.numeric(input$HUC_select) & fileInfo$timeStep == timeStep),]
+            
             path.f             <- file.path(path.feather,
                                             fnames.sub$fnames)
+            
             #Import only relevant columns
             cNames             <- names((feather::feather_metadata(path = path.f))$type)
             cNames.sub         <- which(as.numeric(substr(x     = cNames,
@@ -933,6 +949,34 @@ server <- function(input, output){
                    pt.cex = 2,
                    cex    = 1)
           })
+          
+          #Generate Taylor plots
+          # Create checkbox
+          output$datasets_for_Taylor <- renderUI({
+            radioButtons(inputId = 'taylor_Observational',
+                         label = 'Define observational dataset',
+                         choices = dnames,
+                         inline = T)
+          })
+          observe({
+            if (!is.null(dim(subToHUC))){
+              obsCol <<- which(colnames(subToHUC) == input$taylor_Observational)
+              simCol <<- (1:ncol(subToHUC))[-obsCol]
+              inOrder <<- c(obsCol, simCol)
+              allData <<- as.matrix(subToHUC)
+              allData <<- allData[,inOrder]
+              # define colors
+              ttColors <<- cbPalette[1:ncol(subToHUC)]
+              ttColors <<- ttColors[inOrder]
+              
+              output$taylorPlotclick <- renderPlot({
+                METsteps::taylor(allData   = allData,
+                                 dataNames = colnames(allData),
+                                 dataColors = ttColors)
+              })
+            }
+          })
+          
         }
       }
     }

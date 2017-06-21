@@ -91,11 +91,21 @@ ui <- dashboardPage(
                  p(),
                  plotOutput(outputId    = 'plot3')),
                box(plotOutput(outputId = 'plot1'),
-                   plotOutput(outputId = 'plot2')
+                   tabsetPanel(
+                     tabPanel(title = 'Sub-HUCs',
+                              plotOutput(outputId = 'plot2')
+                              ),
+                     tabPanel(title = 'Taylor',
+                              uiOutput(outputId = "datasets_for_Taylor"),
+                              plotOutput(outputId = 'taylorPlotclick'),
+                              h6('Taylor, K.E. Summarizing multiple aspects of model performance in a 
+                                 single diagram (2001). Journal of Geophysical Research.')
+                     )
+                     )
+                   )
                )
              )
     )
-  )
 )
 
 
