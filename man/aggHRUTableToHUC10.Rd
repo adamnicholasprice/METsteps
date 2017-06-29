@@ -45,3 +45,9 @@ Table of mean raster values for each gridded dataset layer. Columns are gridded 
 This function aggregates HRU values in table format to HUC-10 values.  It produces the same list output as the 
 aggregateRasterToPolygons() function and output can be fed directly into the downscaleHUC10 function.
 }
+\examples{
+aggHRUTableToHUC10(HRUfolder    = "C:/Path/To/PRMS/Folder",
+                   dataName     = "PRMS",
+                   dataCategory = "Recharge")
+
+}
