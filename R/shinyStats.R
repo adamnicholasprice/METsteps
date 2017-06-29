@@ -135,7 +135,7 @@ KSfun    <- function(z){
   }
 }
 
-#' Lapply version of sd
+#' Lapply Version of Standard Deviation
 #'
 #' For use in Shiny app
 #' @export
@@ -147,15 +147,19 @@ SDfun    <- function(z){
                     na.rm  = T)))
 }
 
-#' Lapply version of sd
+#' Lapply Version of Coefficient of Variation
 #'
 #' For use in Shiny app
 #' @export
 #' @return Numeric vector.
 CVfun    <- function(z){
-  require(raster)
+  #require(raster)
   return(mean(apply(X      = z,
                     MARGIN = 1,
-                    FUN    = raster::cv,
+                    #FUN    = raster::cv,
+                    FUN    = function(x, na.rm = F){return(
+                      log10((sd(x, na.rm = na.rm)/mean(x, na.rm = na.rm))*100)
+                      )
+                      },
                     na.rm  = T)))
   }

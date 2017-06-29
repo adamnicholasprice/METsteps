@@ -2,7 +2,7 @@
 % Please edit documentation in R/shinyStats.R
 \name{CVfun}
 \alias{CVfun}
-\title{Lapply version of sd}
+\title{Lapply Version of Coefficient of Variation}
 \usage{
 CVfun(z)
 }

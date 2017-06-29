@@ -59,3 +59,5 @@ exploreShiny <- function(path.feather){
 
 #METsteps::exploreShiny(path.feather = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/FeatherFiles')
 
+# huc12 -42.06, -65.37
+# huc18 -53.11, -52.04

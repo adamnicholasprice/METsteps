@@ -2,7 +2,7 @@
 % Please edit documentation in R/shinyStats.R
 \name{SDfun}
 \alias{SDfun}
-\title{Lapply version of sd}
+\title{Lapply Version of Standard Deviation}
 \usage{
 SDfun(z)
 }

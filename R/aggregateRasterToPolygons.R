@@ -68,33 +68,33 @@ aggregateRasterToPolygons <- function(dataPath,
                                 recursive = TRUE,
                                 projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'){
   
-  # dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/AET/MOD16_A2/"
-  # dataName = 'MOD16-A2'
-  # dataExtension = 'nc'
-  # dataCategory = 'AET'
-  # startDate = '2000-1-1'
-  # timeStep = 'month'
-  # unitDepth = 'mm'
-  # 
-  # 
-  # # # dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/Storage/Grace-CSR/"
-  # # # dataName = 'GRACE-CSR'
-  # # # dataExtension = 'tif'
-  # # # dataCategory = 'Storage'
-  # # # startDate = '2002-04-01'
-  # # # timeStep = 'month'
-  # # # unitDepth = 'mm'
-  # aggFUN = 'mean'
-  # MET.HUC10 = TRUE
-  # polyFname = NULL
-  # polyLayer = NULL
-  # polyIDs = NULL
-  # maxLayers = 6
-  # cushion = 3
-  # verbose = TRUE
-  # projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'
-  # disag = TRUE
-  #  cl = parallel::makeCluster(5)
+  dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/AET/SSEBopMonthly"
+  dataName = 'MOD16-A2'
+  dataExtension = 'tif'
+  dataCategory = 'AET'
+  startDate = '2000-1-1'
+  timeStep = 'month'
+  unitDepth = 'mm'
+
+
+  # # dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/Storage/Grace-CSR/"
+  # # dataName = 'GRACE-CSR'
+  # # dataExtension = 'tif'
+  # # dataCategory = 'Storage'
+  # # startDate = '2002-04-01'
+  # # timeStep = 'month'
+  # # unitDepth = 'mm'
+  aggFUN = 'mean'
+  MET.HUC10 = TRUE
+  polyFname = NULL
+  polyLayer = NULL
+  polyIDs = NULL
+  maxLayers = 6
+  cushion = 3
+  verbose = TRUE
+  projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'
+  disag = TRUE
+   cl = parallel::makeCluster(5)
   
   # Libraries
   libs.spatial = c('maptools', 'raster', 'rgdal', 'sp', 'rgeos', 'velox')
@@ -286,7 +286,17 @@ aggregateRasterToPolygons <- function(dataPath,
     projList2 <- raster::stack(projList1)
   }else {
     if (verbose) writeLines('Passing over reprojection step as defined in argument .cancelReproject.')
-    projList2 <- raster::stack(D.names)
+    projList2 <- suppressWarnings(raster::stack(D.names))
+    if (!is.null(cl)){
+      
+      D.names.split <- split(D.names,
+                             ceiling(seq_along(1:length(D.names))/(length(D.names)/length(cl)))
+                             )
+      projList2 <- raster::stack(pbapply::pblapply(X = D.names.split,
+                                                    FUN = raster::stack,
+                                                    cl = cl))
+    }
+    
   }
 
   

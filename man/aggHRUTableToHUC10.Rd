@@ -2,33 +2,46 @@
 % Please edit documentation in R/aggHRUTabletoHUC10.R
 \name{aggHRUTableToHUC10}
 \alias{aggHRUTableToHUC10}
-\title{HRU Table Aggregate to HUC-10}
+\title{Aggregate HRU Table to HUC-10}
 \usage{
-aggHRUTableToHUC10(HRUtable, dateFormat = c("decimal", "string"), dataName,
-  dataCategory, timeStep, startDate)
+aggHRUTableToHUC10(HRUfolder, dataName, dataCategory, startDate = "auto",
+  timeStep = "day", ext = "csv", sep = "auto", header = TRUE,
+  dateColumn = 1, sortNames = T, verbose = T)
 }
 \arguments{
-\item{HRUtable}{Data.frame of the HRU data to be converted to HUC-10.  Each row = HRU, each column = time step.
-Column names should be in either decimal format (produced through lubridate::decimal_date) or date format
-(YYYY-MM-DD).  DD is required but irrelevant for time steps monthly or greater.}
+\item{HRUfolder}{Character, required; Path to folder containing HRU region files.  Files should be in order by region 
+from r01 to r18.}
 
-\item{dateFormat}{Character; String providing the date format. Either 'decimal' or 'date'.}
+\item{dataName}{Character, required; Name of gridded dataset.}
 
-\item{dataName}{Character; Name of dataset.}
+\item{dataCategory}{Character, required; Type of dataset ('precip', 'AET', 'SWE', etc).}
 
-\item{dataCategory}{Character; Category of dataset (AET, precip, etc).}
+\item{startDate}{Character, optional; Starting date of rasters in format "YYYY-MM-DD". DD required but irrelevant 
+if not daily rasters.  Defaults to "auto".  PRMS files should include a date column in each table.  If startDate is set to 
+"auto", identify the date column by number if it is different than 1.}
 
-\item{timeStep}{Character; Step between measurements (day, month, quarter, annual, etc).}
+\item{timeStep}{Character, required; Time step between layers. Options are 'day', 'week', 'month', 'quarter', and 'year'.
+Defaults to day.}
 
-\item{startDate}{Character; Start date of measurements in 'YYYY-MM-DD' string format.}
+\item{ext}{Character, optional; File extension.  Defaults to 'csv'.}
+
+\item{sep}{Character, optional; Field seperator character. Defaults to 'auto'.}
+
+\item{header}{Logical, optional; Do files have headers? Defaults to TRUE.}
+
+\item{dateColumn}{Integer, required; If startDate == "auto", which column in the tables contains the dates?}
+
+\item{sortNames}{Logical, optional; Should files names be sorted alphabetically? Defaults to TRUE.}
+
+\item{verbose}{Logical, optional; Should progress updates be printed to console?}
+
+\item{dataExtension}{Character, required; Gridded file extension to import, must be compatible with 'raster' package 
+(tif', 'nc', ect). The .grd format is discouraged due to connection issues that occur during processing.}
 }
 \value{
-Table of HUC-10 means by HUC.  Time-step x HUC-10.
+Table of mean raster values for each gridded dataset layer. Columns are gridded layers, rows are shapefile features.
 }
 \description{
 This function aggregates HRU values in table format to HUC-10 values.  It produces the same list output as the 
 aggregateRasterToPolygons() function and output can be fed directly into the downscaleHUC10 function.
-}
-\examples{
-aggHRUTableToHUC10()
 }
