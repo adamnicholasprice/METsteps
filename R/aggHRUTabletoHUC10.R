@@ -23,8 +23,10 @@
 #' @export
 #' @return Table of mean raster values for each gridded dataset layer. Columns are gridded layers, rows are shapefile features.
 #' @examples
-#' aggHRUTableToHUC10(HRUfolder = 'C:/Path/To/PRMS/Folder', dataName = 'PRMS', dataCategory = 'Recharge)
-
+#' aggHRUTableToHUC10(HRUfolder    = "C:/Path/To/PRMS/Folder",
+#'                    dataName     = "PRMS",
+#'                    dataCategory = "Recharge")
+#' 
 aggHRUTableToHUC10 <- function(HRUfolder, 
                                dataName,
                                dataCategory,
