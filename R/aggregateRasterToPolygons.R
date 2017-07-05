@@ -68,33 +68,33 @@ aggregateRasterToPolygons <- function(dataPath,
                                 recursive = TRUE,
                                 projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'){
   
-  dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/AET/SSEBopMonthly"
-  dataName = 'MOD16-A2'
-  dataExtension = 'tif'
-  dataCategory = 'AET'
-  startDate = '2000-1-1'
-  timeStep = 'month'
-  unitDepth = 'mm'
-
-
-  # # dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/Storage/Grace-CSR/"
-  # # dataName = 'GRACE-CSR'
-  # # dataExtension = 'tif'
-  # # dataCategory = 'Storage'
-  # # startDate = '2002-04-01'
-  # # timeStep = 'month'
-  # # unitDepth = 'mm'
-  aggFUN = 'mean'
-  MET.HUC10 = TRUE
-  polyFname = NULL
-  polyLayer = NULL
-  polyIDs = NULL
-  maxLayers = 6
-  cushion = 3
-  verbose = TRUE
-  projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'
-  disag = TRUE
-   cl = parallel::makeCluster(5)
+  # dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/AET/SSEBopMonthly"
+  # dataName = 'MOD16-A2'
+  # dataExtension = 'tif'
+  # dataCategory = 'AET'
+  # startDate = '2000-1-1'
+  # timeStep = 'month'
+  # unitDepth = 'mm'
+  # 
+  # 
+  # # # dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/Storage/Grace-CSR/"
+  # # # dataName = 'GRACE-CSR'
+  # # # dataExtension = 'tif'
+  # # # dataCategory = 'Storage'
+  # # # startDate = '2002-04-01'
+  # # # timeStep = 'month'
+  # # # unitDepth = 'mm'
+  # aggFUN = 'mean'
+  # MET.HUC10 = TRUE
+  # polyFname = NULL
+  # polyLayer = NULL
+  # polyIDs = NULL
+  # maxLayers = 6
+  # cushion = 3
+  # verbose = TRUE
+  # projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'
+  # disag = TRUE
+  #  cl = parallel::makeCluster(5)
   
   # Libraries
   libs.spatial = c('maptools', 'raster', 'rgdal', 'sp', 'rgeos', 'velox')
