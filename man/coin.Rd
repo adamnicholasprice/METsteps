@@ -4,14 +4,16 @@
 \alias{coin}
 \title{Coin of data set}
 \usage{
-coin(x)
+coin(x, full = FALSE)
 }
 \arguments{
 \item{x}{Vector, matrix, dataframe, or list.}
+
+\item{full}{Logical; Should the full head and full tail be returned instead of shorts?}
 }
 \value{
 Head and tail of x.
 }
 \description{
-Returns both the head and tail of dataset
+Returns both the short head and short tail of dataset
 }

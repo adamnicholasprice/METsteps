@@ -4,10 +4,13 @@
 \alias{createMETname}
 \title{Create File Name}
 \usage{
-createMETname(zoo.obj)
+createMETname(x, fromSequence = TRUE)
 }
 \arguments{
-\item{zoo.obj}{List object created by METsteps::downscaleHUC10() function.}
+\item{x}{Either list object created by METsteps::downscaleHUC10() function or results from METsteps::extractMetadata() function.}
+
+\item{fromSequence}{Logical; If TRUE, create name from object output from METsteps::downscaleHUC10().  If FALSE, create name
+from results of METsteps::extractMetadata().}
 }
 \value{
 List of filenames for zoo objects.
@@ -16,5 +19,5 @@ List of filenames for zoo objects.
 Function to create feather filenames to be called in the METsteps Shiny application.
 }
 \examples{
-createMETname(zoo.obj)
+createMETname(x)
 }

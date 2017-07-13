@@ -8,30 +8,35 @@ ui <- dashboardPage(
     conditionalPanel(
       condition = "output.plotsCreated == false",
       title <- "Input Controls",
-      selectInput(inputId  = 'category_select',
-                  label    = 'Component',
-                  choices  = unique(fileInfo$dataCategory),
-                  selected = 'AET'),
-      selectInput(inputId  = 'tstep_select',
-                  label    = 'Time Step',
-                  choices  = unique(fileInfo$timeStep),
-                  selected = 'month'),
+      div(style='height:60px;',
+          selectInput(inputId  = 'category_select',
+                      label    = 'Component',
+                      choices  = unique(fileInfo$dataCategory),
+                      selected = 'AET')),
+      div(style='height:60px;',
+          selectInput(inputId  = 'tstep_select',
+                      label    = 'Time Step',
+                      choices  = unique(fileInfo$timeStep),
+                      selected = 'month')),
       uiOutput(outputId = 'products_available'),
-      selectInput(inputId  = 'map_HUC_select',
-                  label    = 'Map HUC level',
-                  choices  = list('HUC 2' = 2, 'HUC 4' = 4, 'HUC 6' = 6, 'HUC 8' = 8),
-                  selected = 2),
-      uiOutput(outputId = "stats_available"),
-      title <- "Color Scheme",
-      checkboxInput(inputId = 'colorCheckBox',
-                    label    = 'Manual Color Scheme?',
-                    value    = FALSE),
+      div(style='height:60px;',
+          selectInput(inputId  = 'map_HUC_select',
+                      label    = 'Map HUC level',
+                      choices  = list('HUC 2' = 2, 'HUC 4' = 4, 'HUC 6' = 6, 'HUC 8' = 8),
+                      selected = 2)),
+      div(style='height:60px;',
+          uiOutput(outputId = "stats_available")),
+      div(style='height:50px;',
+          checkboxInput(inputId = 'colorCheckBox',
+                        label    = 'Manual Color Scheme?',
+                        value    = FALSE)),
       conditionalPanel(
         condition = 'input.colorCheckBox == false',
-        selectInput(inputId  = "colors",
-                    label    = "Colors",
-                    choices  = c('Viridis', 'Magma', 'Inferno', 'Plasma'),
-                    selected = 'Viridis')
+        div(style='height:65px;',
+            selectInput(inputId  = "colors",
+                        label    = "Colors",
+                        choices  = c('Viridis', 'Magma', 'Inferno', 'Plasma'),
+                        selected = 'Viridis'))
       ),
       conditionalPanel(
         condition = 'input.colorCheckBox == true',
@@ -45,6 +50,17 @@ ui <- dashboardPage(
             tags$label("high", `for` = "maxCol"), 
             tags$input(id = "maxCol", type = "text", value = '', class = 'input-small'))
       ),
+      div(style='height:60px;',
+          radioButtons(inputId = 'subset_Option',
+                       label = 'Subset Option',
+                       choices = list('Season' = TRUE,
+                                      'Month'  = FALSE),
+                       inline = T)),
+      div(style='height:60px;',
+          uiOutput(outputId = 'subsetoutput')),
+      checkboxInput(inputId = 'plot_seasMon_subset',
+                    label = 'Plot subsetted data?',
+                    value = TRUE),
       actionButton(inputId = 'go',
                    label   = "Create Map",
                    width   = '87%'),
@@ -53,6 +69,13 @@ ui <- dashboardPage(
     conditionalPanel(
       condition = "output.plotsCreated",
       title <- "Map Controls",
+      uiOutput(outputId = 'light_SingleHUC'),
+      actionButton(inputId = 'highlightHUC',
+                   label   = "Highlight",
+                   width   = '87%'),
+      actionButton(inputId = 'removeManHighlights',
+                   label   = "Clear Highlights",
+                   width   = '87%'),
       uiOutput(outputId = 'maptime_available')
     ),
     conditionalPanel(
@@ -79,6 +102,7 @@ ui <- dashboardPage(
     ),
     disable = FALSE
   ),
+  #######################################################################
   dashboardBody(
     title = "",
     id    = "tabset1",
@@ -87,19 +111,36 @@ ui <- dashboardPage(
              fluidRow(
                box(
                  textOutput(outputId    = "text2"),
+                 div(style = 'color:red;',
+                     textOutput(outputId    = "textWarning")),
                  leafletOutput(outputId = "mymap"),
                  p(),
                  plotOutput(outputId    = 'plot3')),
                box(plotOutput(outputId = 'plot1'),
                    tabsetPanel(
                      tabPanel(title = 'Sub-HUCs',
-                              plotOutput(outputId = 'plot2')
+                              checkboxInput(inputId = 'sample_subHUCs',
+                                            label = 'Sample sub-HUCs to increase plotting speed?',
+                                            value = TRUE),
+                              plotOutput(outputId = 'plot2',
+                                         #add the hover options
+                                         hover = hoverOpts(
+                                           id = "plot2_hover",
+                                           delay = 400,
+                                           nullOutside = TRUE)
+                                         ),
+                              # textOutput(outputId = 'hoverText')
+                              verbatimTextOutput(outputId = "info",
+                                                 placeholder = T)
                               ),
                      tabPanel(title = 'Taylor',
                               uiOutput(outputId = "datasets_for_Taylor"),
                               plotOutput(outputId = 'taylorPlotclick'),
                               h6('Taylor, K.E. Summarizing multiple aspects of model performance in a 
                                  single diagram (2001). Journal of Geophysical Research.')
+                     ),
+                     tabPanel(title = 'Shirley',
+                              plotOutput(outputId = 'ShirleysPlot')
                      )
                      )
                    )

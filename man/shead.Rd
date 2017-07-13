@@ -4,10 +4,14 @@
 \alias{shead}
 \title{Short head of object}
 \usage{
-shead(x, n_col = 1:10)
+shead(x, n_col = 1:10, returnDim = TRUE)
 }
 \arguments{
 \item{x}{Vector, matrix, dataframe, or list.}
+
+\item{n_col}{Vector; Which columns to return. Defaults to 10.}
+
+\item{returnDim}{Logical; Return dimensions of data? Defaults to TRUE}
 }
 \value{
 Head of x.

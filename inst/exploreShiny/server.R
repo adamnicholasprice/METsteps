@@ -13,27 +13,64 @@ server <- function(input, output){
                        choices  = unique(fileInfo.sub$dataName),
                        selected = c('MOD16-A2', 'SSEBop'))
   })
-  # Change available statistics based on number of datasets chosen  (2 datasets:  usual stats, 3+ datasets:  sd, cv, etc)
+  # List available statistics
   output$stats_available <- renderUI({
     if (length(input$data_select) == 1){
       selectInput(inputId = 'stat_select',
                   label   = 'Select Statistic:',
-                  choices = list('Direct Values' = 'DV'))
+                  choices = METsteps::shinyFunExtract(numD = 'one'))
     }else if (length(input$data_select) == 2){
       selectInput(inputId = 'stat_select',
                   label   = 'Select Statistic:',
-                  choices = list('Difference' = 'DIF', 'NSE' = 'NSE', 'RMSE' = 'RMSE', 'PBIAS' = 'PBIAS',
-                                 'Cor - Kendall' = 'COR.K', 'Cor - Spearman' = 'COR.S', 'Peak Timing' = 'PEAK',
-                                 'Ks test' = 'KS'))
+                  choices = METsteps::shinyFunExtract(numD = 'two'))
     }else{
       selectInput(inputId = 'stat_select',
                   label   = 'Select Statistic:',
-                  choices = list('Coefficient of Variation' = 'CV', 'Standard Deviation' = 'SD'))
+                  choices = METsteps::shinyFunExtract(numD = 'poly'))
     }
   })
+  # Change available seasonal/monthly subsetting based on subset_Option
+  output$subsetoutput <- renderUI({
+    if (input$subset_Option == TRUE){
+      selectInput(inputId  = 'seasMon_select',
+                  label    = 'Select Season',
+                  choices  = c('None', 'Fall', 'Winter', 'Spring', 'Summer'),
+                  selected = 'None')
+    }else if (input$subset_Option == FALSE){
+      selectInput(inputId  = 'seasMon_select',
+                  label    = 'Select Month',
+                  choices  = c('None', base::month.abb),
+                  selected = 'None')
+    }else{}
+  })
+  #  default highlight individual HUC - just so no movement when loading maps
+  output$light_SingleHUC <- renderUI({
+    selectizeInput(inputId = 'lightHUC', 
+                   label = 'Highlight Specific HUC',
+                   choices = c(NA, NA, NA))
+  })
+  # default x-axis choices - just so no movement when loading maps
+  output$time_available <- renderUI({
+    if (exists('subData')){
+      times.dec <- unique(as.integer(index(subData[[1]])))
+    }else{
+      times.dec <- seq(2000,2010)
+    }
+    
+    vrange    <- c(min(times.dec), max(times.dec))
+    if (length(times.dec) > 10){vrange <- c((max(times.dec)-10), max(times.dec))}
+    
+    dateRangeInput(inputId = 'slider_time',
+                   label   = 'Time Range for x-axis',
+                   min = paste0(vrange[1], '-01-01'),
+                   max = paste0(vrange[2], '-01-01'))
+  })
+  
+  
   
   ##### Generate Default plots on Main Panel
   # Render empty leaflet map
+  output$text2 <- renderText({'All months included'})
   output$mymap <- renderLeaflet({
     leaflet(
       options =
@@ -56,108 +93,25 @@ server <- function(input, output){
   # Render blank plots lineplots
   multiplot.cex <- 1.8
   multiplot.lab <- 1.8
-  output$text2 <- renderText({'                  '})
   output$plot1 <- renderPlot({
-    layout(mat     = matrix(data  = c(1, 2, 3),
-                            nrow  = 3,
-                            ncol  = 1,
-                            byrow = T),
-           widths  = 1,
-           heights = c(2.5, 1, 1))
-    #-- ET direct data plot
-    par(mar = c(0, 6.2, 4.1, 2.1))
-    if (is.null(input$slider_time)){
-      drange <- NULL
-    }else{
-      drange <- lubridate::decimal_date(as.Date(input$slider_time))
-    }
-    plot(x        = 1,
-         type     = 'n',
-         main     = '',
-         xaxs     = "i",
-         ylab     = 'units',
-         xlim     = drange,
-         xlab     = '',
-         xaxt     = 'n',
-         cex.axis = multiplot.cex,
-         cex.lab  = multiplot.lab)
-    #-- Difference plot
-    par(mar = c(0, 6.2, 0, 2.1))
-    plot(x        = 1,
-         type     = 'n',
-         main     = '',
-         xaxs     = "i",
-         ylab     = 'Difference',
-         xlab     = '',
-         xlim     = drange,
-         xaxt     = 'n',
-         cex.axis = multiplot.cex,
-         cex.lab  = multiplot.lab)
-    #-- Percent difference plot
-    par(mar = c(2, 6.2, 0, 2.1))
-    plot(x        = 1,
-         type     = 'n',
-         main     = '',
-         xaxs     = "i",
-         ylab     = 'Percent\nDifference',
-         xlab     = 'Time',
-         xlim     = drange,
-         cex.axis = multiplot.cex,
-         cex.lab  = multiplot.lab)
-    par(mar = c(5.1, 4.1, 4.1, 2.1))
+    METsteps::shinyPlot_HUC_Time_Series_and_Difference(default = T)
   })
   output$plot2 <- renderPlot({
-    par(mar = c(5.1, 4.1, 4.1, 1.4))
-    if (is.null(input$slider_time)){
-      drange <- NULL
-    }else{
-      drange <- lubridate::decimal_date(as.Date(input$slider_time))
-    }
-    plot(x    = 1,
-         type = 'n',
-         main = paste('Subset to HUC ##'),
-         xaxs = "i",
-         ylab = 'units',
-         xlab = 'Time',
-         xlim = drange)
-    par(mar = c(5.1, 4.1, 4.1, 2.1))
+    METsteps::shinyPlot_HUC_subHUC_Plot(default. = T)
   })
   output$plot3 <- renderPlot({
-    par(mfrow = c(1, 2))
-    plot(x    = 1,
-         type = 'n',
-         ylim = c(0,100),
-         xlim = c(1,12),
-         xaxs = 'i',
-         xaxt = 'n',
-         ylab = 'units',
-         xlab = '',
-         main = '25-75th Percentile Monthly Ranges')
-    axis(side      = 1,
-         at     = 1:12,
-         labels = c('Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'))
-    plot(x    = 1,
-         type = 'n',
-         ylim = c(0, 1),
-         xlim = c(0,50),
-         xaxs = 'i',
-         ylab = 'Fn(x)',
-         xlab = 'x',
-         main = 'Empirical Cumulative Distribution Function')
-    abline(h   = c(0,1),
-           col = 'grey',
-           lty = 2)
-    par(mfrow = c(1,2))
+    shinyPlot_HUC_Mean_Percentile_and_ECDF(default. = T)
   })
   # Note that no plots have been created yet
   plotsCreated <- F
   output$plotsCreated <- reactive({
     FALSE
   })
-  outputOptions(output, "plotsCreated", suspendWhenHidden = FALSE) 
+  outputOptions(output, "plotsCreated", suspendWhenHidden = FALSE)
   
   
-  ##### Reactive statistical processing and plotting after clicking update button
+  
+  ##### Reactive statistical processing and map plotting after clicking update button
   deComps.push <- observeEvent(input$go, {
     #-------- Reset default plots if previously generated ones exist
     if (plotsCreated){
@@ -185,98 +139,15 @@ server <- function(input, output){
       # Render blank plots lineplots
       multiplot.cex <- 1.8
       multiplot.lab <- 1.8
-      output$text2 <- renderText({'                  '})
       output$plot1 <- renderPlot({
-        layout(mat     = matrix(data  = c(1, 2, 3),
-                                nrow  = 3,
-                                ncol  = 1,
-                                byrow = T),
-               widths  = 1,
-               heights = c(2.5, 1, 1))
-        #-- ET direct data plot
-        par(mar = c(0, 6.2, 4.1, 2.1))
-        if (is.null(input$slider_time)){
-          drange <- NULL
-        }else{
-          drange <- lubridate::decimal_date(as.Date(input$slider_time))
-        }
-        plot(x        = 1,
-             type     = 'n',
-             main     = '',
-             xaxs     = "i",
-             ylab     = 'units',
-             xlim     = drange,
-             xlab     = '',
-             xaxt     = 'n',
-             cex.axis = multiplot.cex,
-             cex.lab  = multiplot.lab)
-        #-- Difference plot
-        par(mar = c(0, 6.2, 0, 2.1))
-        plot(x        = 1,
-             type     = 'n',
-             main     = '',
-             xaxs     = "i",
-             ylab     = 'Difference',
-             xlab     = '',
-             xlim     = drange,
-             xaxt     = 'n',
-             cex.axis = multiplot.cex,
-             cex.lab  = multiplot.lab)
-        #-- Percent difference plot
-        par(mar = c(2, 6.2, 0, 2.1))
-        plot(x        = 1,
-             type     = 'n',
-             main     = '',
-             xaxs     = "i",
-             ylab     = 'Percent\nDifference',
-             xlab     = 'Time',
-             xlim     = drange,
-             cex.axis = multiplot.cex,
-             cex.lab  = multiplot.lab)
-        par(mar = c(5.1, 4.1, 4.1, 2.1))
+        METsteps::shinyPlot_HUC_Time_Series_and_Difference(default = T)
       })
+      
       output$plot2 <- renderPlot({
-        par(mar = c(5.1, 4.1, 4.1, 1.4))
-        if (is.null(input$slider_time)){
-          drange <- NULL
-        }else{
-          drange <- lubridate::decimal_date(as.Date(input$slider_time))
-        }
-        plot(x    = 1,
-             type = 'n',
-             main = paste('Subset to HUC ##'),
-             xaxs = "i",
-             ylab = 'units',
-             xlab = 'Time',
-             xlim = drange)
-        par(mar = c(5.1, 4.1, 4.1, 2.1))
+        METsteps::shinyPlot_HUC_subHUC_Plot(default. = T)
       })
       output$plot3 <- renderPlot({
-        par(mfrow = c(1, 2))
-        plot(x    = 1,
-             type = 'n',
-             ylim = c(0,100),
-             xlim = c(1,12),
-             xaxs = 'i',
-             xaxt = 'n',
-             ylab = 'units',
-             xlab = '',
-             main = '25-75th Percentile Monthly Ranges')
-        axis(side      = 1,
-             at     = 1:12,
-             labels = c('Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'))
-        plot(x    = 1,
-             type = 'n',
-             ylim = c(0, 1),
-             xlim = c(0,50),
-             xaxs = 'i',
-             ylab = 'Fn(x)',
-             xlab = 'x',
-             main = 'Empirical Cumulative Distribution Function')
-        abline(h   = c(0,1),
-               col = 'grey',
-               lty = 2)
-        par(mfrow = c(1,2))
+        METsteps::shinyPlot_HUC_Mean_Percentile_and_ECDF(default. = T)
       })
     }
     plotsCreated <<- T
@@ -295,6 +166,26 @@ server <- function(input, output){
     stat      <<- input$stat_select
     # Selected color scheme
     colScheme <<- input$colors
+    # Selected season/month
+    if (input$seasMon_select == 'None'){
+      subsetMonths <<- NA
+      output$text2  <- renderText({
+        'All months included'
+      })
+    }else if (input$seasMon_select %in% c('Fall', 'Winter', 'Spring', 'Summer')){
+      subsetMonths <<- get(input$seasMon_select)
+      output$text2  <- renderText({
+        paste('Subsetted to:', paste0(base::month.name[subsetMonths], collapse = ', '))
+      })
+    }else{
+      subsetMonths <<- which(base::month.abb == input$seasMon_select)
+      output$text2  <- renderText({
+        paste('Subsetted to:', paste0(base::month.name[subsetMonths], collapse = ', '))
+      })
+    }
+    # Plot subsetted data?
+    logPlotSubset <<- input$plot_seasMon_subset
+    
     
     #-------- Load and format datasets
     # Load all relevant files in loop
@@ -362,6 +253,21 @@ server <- function(input, output){
     #Subset the data list by binary.locs (above)
     subData     <<- Data[binary.locs]
     
+    # If logPlotSubset = T, subset all data prior any stats work i.e. only subsetted data will be plotted in line plots
+    subsetbyMonthsFun <- function(x, mts){
+      return(x[which(lubridate::month(lubridate::date_decimal(index(x))) %in% mts), ])
+    }
+    
+    if (length(subsetMonths) > 1){
+      subData <- lapply(X   = subData,
+                        FUN = subsetbyMonthsFun,
+                        mts = subsetMonths)
+    }else if (!is.na(subsetMonths)){
+      subData <- lapply(X   = subData,
+                        FUN = subsetbyMonthsFun,
+                        mts = subsetMonths)
+    }
+    
     #Set bounds on x-axis time period control
     output$time_available <- renderUI({
       times.dec <- unique(as.integer(index(subData[[1]])))
@@ -375,6 +281,15 @@ server <- function(input, output){
                      start   = as.Date(lubridate::date_decimal(vrange[1])),
                      end     = as.Date(lubridate::date_decimal(vrange[2]))
       )
+    })
+    output$light_SingleHUC <- renderUI({
+      highChoices <- as.character(colnames(subData[[1]]))
+      highChoices[nchar(highChoices) < max(nchar(highChoices))] = paste0('0', highChoices[nchar(highChoices) < max(nchar(highChoices))])
+      highChoices = sort(highChoices)
+      selectizeInput(inputId = 'lightHUC',
+                     label = 'Highlight Specific HUC',
+                     choices = highChoices,
+                     multiple = TRUE)
     })
     
     #-------- Apply selected statistic to subData
@@ -412,10 +327,11 @@ server <- function(input, output){
                    index(foo) <- indd.cb
                    return(foo)
                  })
-    #Apply statistical function as selected in UI
+    
+    #Apply statistical function as selected in UI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if (length(cb) > 2000 || (length(cb) > 18 && NCOL(cb[[1]]) > 2)){
       #Initialize cluster
-      if (stat != 'DV'){
+      if (stat != 'shinyFun_one_Mean'){
         if (exists('cl') == FALSE){
           no_cores <- parallel::detectCores()-1
           cl <- parallel::makeCluster(no_cores)
@@ -425,48 +341,28 @@ server <- function(input, output){
             cl <- parallel::makeCluster(no_cores)
           }
         }
-      }else{
-        cl <- NULL
-      }
+      }else{cl <- NULL}
       # Single-dataset stats
-      if (stat == 'DV'){   statOUT <- as.numeric(unlist(lapply(X = cb, FUN = mean)))}
-      # Two-dataset stats
-      if (stat == 'NSE'){  statOUT <- as.numeric(unlist(parLapply(cl = cl, X = cb, fun = NSEfun))); statOUT[statOUT<0] <- 0}
-      if (stat == 'RMSE'){ statOUT <- as.numeric(unlist(parLapply(cl = cl, X = cb, fun = RMSEfun)))}
-      if (stat == 'PBIAS'){statOUT <- as.numeric(unlist(parLapply(cl = cl, X = cb, fun = PBIASfun)))}
-      if (stat == 'COR.K'){statOUT <- as.numeric(unlist(parLapply(cl = cl, X = cb, fun = COR.Kfun)))}
-      if (stat == 'COR.S'){statOUT <- as.numeric(unlist(parLapply(cl = cl, X = cb, fun = COR.Sfun)))}
-      if (stat == 'DIF'){  statOUT <- as.numeric(unlist(parLapply(cl = cl, X = cb, fun = DIFfun)))}
-      if (stat == 'PEAK'){ statOUT <- as.numeric(unlist(parLapply(cl = cl, X = cb, fun = PEAKfun)))}
-      if (stat == 'KS'){   statOUT <- as.numeric(unlist(parLapply(cl = cl, X = cb, fun = KSfun)))}
-      # Three or more-dataset stats
-      if (stat == 'CV'){   statOUT <- as.numeric(unlist(parLapply(cl=cl, X = cb, fun = CVfun)))}
-      if (stat == 'SD'){   statOUT <- as.numeric(unlist(parLapply(cl=cl, X = cb, fun = SDfun)))}
-      # Replace Inf with NA
-      statOUT[is.infinite(statOUT)] <- NA
-      
+      if (stat == 'shinyFun_one_Mean'){
+        statOUT <- as.numeric(unlist(lapply(X = cb, FUN = get(stat))))
+      }else{
+        statOUT <- as.numeric(unlist(parLapply(cl = cl, X = cb, fun = get(stat))))
+        }
       #Close cluster
       if (exists('cl')){
         if (is.null(cl) == F) parallel::stopCluster(cl)
         rm(cl)
       }
+    }else{statOUT <- as.numeric(unlist(lapply(X = cb, FUN = get(stat))))}
+    # Replace Inf with NA
+    statOUT[is.infinite(statOUT)] <- NA
+    
+    posAndneg <- (length(unique(sign(range(unlist(cb))))) > 1)
+    
+    if ((stat == 'CV') && (posAndneg)){
+      output$textWarning <- renderText({'Warning: CV statistic is invalid for datasets with both positive and negative values'})
     }else{
-      # Single-dataset stats
-      if (stat == 'DV'){   statOUT <- as.numeric(unlist(lapply(X = cb, FUN = mean)))}
-      # Two-dataset stats
-      if (stat == 'NSE'){  statOUT <- as.numeric(unlist(lapply(X = cb, FUN = NSEfun))); statOUT[statOUT<0] <- 0}
-      if (stat == 'RMSE'){ statOUT <- as.numeric(unlist(lapply(X = cb, FUN = RMSEfun)))}
-      if (stat == 'PBIAS'){statOUT <- as.numeric(unlist(lapply(X = cb, FUN = PBIASfun)))}
-      if (stat == 'COR.K'){statOUT <- as.numeric(unlist(lapply(X = cb, FUN = COR.Kfun)))}
-      if (stat == 'COR.S'){statOUT <- as.numeric(unlist(lapply(X = cb, FUN = COR.Sfun)))}
-      if (stat == 'DIF'){  statOUT <- as.numeric(unlist(lapply(X = cb, FUN = DIFfun)))}
-      if (stat == 'PEAK'){ statOUT <- as.numeric(unlist(lapply(X = cb, FUN = PEAKfun)))}
-      if (stat == 'KS'){   statOUT <- as.numeric(unlist(lapply(X = cb, FUN = KSfun)))}
-      # Three or more-dataset stats
-      if (stat == 'CV'){   statOUT <- as.numeric(unlist(lapply(X = cb, FUN = CVfun)))}
-      if (stat == 'SD'){   statOUT <- as.numeric(unlist(lapply(X = cb, FUN = SDfun)))}
-      # Replace Inf with NA
-      statOUT[is.infinite(statOUT)] <- NA
+      output$textWarning <- renderText({''})
     }
     
     #-------- Create color palette for filling polygons
@@ -544,6 +440,8 @@ server <- function(input, output){
                  })
   })
   
+  
+  
   ##### Reactive Create New Map
   newMap <- observeEvent(input$goNewMap, {
     output$plotsCreated <- reactive({
@@ -553,16 +451,50 @@ server <- function(input, output){
   
   
   
-  ##### Response to clicking (selecting) a polygon interactively
+  ##### Response to clicking "highlight individual HUC regions" button
+  manHighIds <<- vector()
+  highlight.manual <- observeEvent(input$highlightHUC, {
+    HUCtoLight <- input$lightHUC
+    manHighlightpoly <- inShape[inShape@data$HUC %in% HUCtoLight,]
+
+    for (i in 1:nrow(manHighlightpoly)){
+      manId <- paste0('manHigh', floor(runif(1)*1000))
+      manHighIds <<- c(manHighIds, manId)
+      leafletProxy(mapId = 'mymap',
+                   data  = inShape) %>%
+        addPolygons(data    = manHighlightpoly[i,],
+                    weight  = 2,
+                    color   = 'red',
+                    fill    = F,
+                    opacity = 1,
+                    layerId = manId)
+    }
+  })
+  
+  
+  
+  ##### Response to clicking "clear highlight" button
+  remove.highlight <- observeEvent(input$removeManHighlights, {
+    if (length(manHighIds) > 0){
+      leafletProxy(mapId = 'mymap',
+                   data  = inShape) %>%
+        removeShape(layerId = manHighIds)
+      manHighIds <<- vector()
+    }else{}
+  })
+  
+  
+  
+  ##### Response to clicking (selecting) a polygon interactively  <- this is where most plotting functions will go
   observe({
     click <- input$mymap_shape_click
     
     #If click value is 'NULL' (when clicked between polygons) dont return any plots. Otherwise, continue.
     if (is.null(click) == FALSE){
       #Get data category
-      dataCategory <- unique((fileInfo[fileInfo$dataName %in% dnames,])$dataCategory)
+      dataCategory <<- unique((fileInfo[fileInfo$dataName %in% dnames,])$dataCategory)
       #HUC Clicked Upon
-      HCU <- click$id
+      HCU <<- click$id
       if (is.na(suppressWarnings(as.numeric(HCU))) == FALSE){
         #Create update polygon (last polygon clicked on has highlighted border)
         clickpoly <- inShape[inShape@data$HUC == HCU,]
@@ -589,165 +521,51 @@ server <- function(input, output){
         }
         
         if (as.numeric(HCU) %in% as.numeric(colnames(subData[[1]]))){
-          subToHUC        <- lapply(X   = subData,
+          subToHUC        <<- lapply(X   = subData,
                                     FUN = subToHUCfun)
           
+          if (logPlotSubset){
+            if (length(subsetMonths) > 1){
+              subToHUC <<- lapply(X   = subToHUC,
+                                 FUN = subsetbyMonthsFun,
+                                 mts = subsetMonths)
+            }else if (!is.na(subsetMonths)){
+              subToHUC <<- lapply(X   = subToHUC,
+                                 FUN = subsetbyMonthsFun,
+                                 mts = subsetMonths)
+            }
+          }
+          
           presIndex       <- index(subToHUC[[1]])   #Record index to reapply after unlisting
-          subToHUC        <- zoo::as.zoo(matrix(data = unlist(subToHUC),
+          subToHUC        <<- zoo::as.zoo(matrix(data = unlist(subToHUC),
                                                 nrow = length(subToHUC[[1]])))
-          subToHUC[is.infinite(subToHUC)] <- NA
-          index(subToHUC) <- presIndex
-          colnames(subToHUC) <- dnames
+          subToHUC[is.infinite(subToHUC)] <<- NA
+          index(subToHUC) <<- presIndex
+          colnames(subToHUC) <<- dnames
           
           #Generate ET plot
           #cbPalette <- c("#56B4E9", "#F0E442", "#CC79A7", "#0072B2", "#D55E00")
-          cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#000000")
+          cbPalette <<- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#000000")
           abl.col <- 'darkgrey'
           output$plot1 <- renderPlot({
-            layout(mat     = matrix(data  = c(1,2,3),
-                                    nrow  = 3,
-                                    ncol  = 1,
-                                    byrow = T),
-                   widths  = 1,
-                   heights = c(2.5, 1, 1))
-            if (is.null(input$slider_time)){
-              drange <- NULL
-            } else{
-              drange <- lubridate::decimal_date(as.Date(input$slider_time))
-            }
-            #-- ET direct data plot
-            par(mar = c(0, 6.2, 4.1, 2.1))
-            plot(x        = subToHUC[,1],
-                 col      = cbPalette[1],
-                 main     = paste('HUC',
-                                  as.character(HCU)),
-                 xaxs     = "i",
-                 ylab     = dataCategory,
-                 xlim     = drange,
-                 #ylim     = c(0, max(subToHUC, na.rm = T)),
-                 # MCH!!
-                 ylim     = c(min(subToHUC, na.rm = T), max(subToHUC, na.rm = T)),
-                 xlab     = '',
-                 xaxt     = 'n',
-                 cex.axis = multiplot.cex,
-                 cex.lab  = multiplot.lab,
-                 cex.main = 1.8,
-                 lwd      = 2,
-                 yaxs     = 'i')
-            if (ncol(subToHUC) > 1){
-              for (i in 2:ncol(subToHUC)){
-                lines(x    = subToHUC[,i],
-                      col  = cbPalette[i],
-                      xaxs = "i",
-                      lwd  = 2)
-              }
-            }
-            abline(v   = unique(as.integer(index(subToHUC))),
-                   col = abl.col,
-                   lty = 2)
-            legend(x      = 'bottomright',
-                   legend = dnames,
-                   pch    = 15,
-                   col    = cbPalette[1:ncol(subToHUC)],
-                   pt.cex = 2,
-                   cex    = 1.5)
-            #-- Difference plot
-            par(mar = c(0, 6.2, 0, 2.1))
-            col.dif = "firebrick"
-            abl.col = 'darkgrey'
-            if (ncol(subToHUC) == 1){
-              plot(x        = 1,
-                   type     = 'n',
-                   main     = '',
-                   xaxs     = 'i',
-                   ylab     = 'Difference (mm)',
-                   xlab     = '',
-                   xlim     = drange,
-                   xaxt     = 'n',
-                   cex.axis = multiplot.cex,
-                   cex.lab  = multiplot.lab)
-              abline(v   = unique(as.integer(index(subToHUC))),
-                     col = abl.col,
-                     lty = 2)
-              abline(h   = 0,
-                     col = abl.col,
-                     lty = 1)}
-            if (ncol(subToHUC) == 2){
-              plot(x        = subToHUC[,2] - subToHUC[,1],
-                   col      = col.dif,
-                   main     = '',
-                   xaxs     = "i",
-                   ylab     = 'Difference (mm)',
-                   xlab     = '',
-                   xlim     = drange,
-                   xaxt     = 'n',
-                   cex.axis = multiplot.cex,
-                   cex.lab  = multiplot.lab,
-                   lwd      = 2)
-              abline(v   = unique(as.integer(index(subToHUC))),
-                     col = abl.col,
-                     lty = 2)
-              abline(h   = 0,
-                     col = abl.col,
-                     lty = 1)
-            }
-            if (ncol(subToHUC) > 2){
-              combinations  <- t(combn(x = ncol(subToHUC),
-                                       m = 2))
-              combFUNdif <- function(combrow){
-                subToHUC[, combrow[2]] - subToHUC[, combrow[1]]
-              }
-              difmat        <- as.zoo(apply(X      = combinations,
-                                            MARGIN = 1,
-                                            FUN    = combFUNdif))
-              index(difmat) <- index(subToHUC)
-              
-              plot(x        = difmat[,1],
-                   col      = col.dif,
-                   main     = '',
-                   xaxs     = "i",
-                   ylab     = 'Difference (mm)',
-                   xlab     = '',
-                   xlim     = drange,
-                   xaxt     = 'n',
-                   cex.axis = multiplot.cex,
-                   cex.lab  = multiplot.lab,
-                   lwd      = 2,
-                   ylim     = c(min(difmat, na.rm = T),
-                                max(difmat, na.rm = T)))
-              for (i in 2:ncol(difmat)){
-                lines(x    = difmat[,i],
-                      xaxs = 'i',
-                      col  = col.dif,
-                      lwd  = 2,
-                      lty  = i)
-              }
-              abline(v   = unique(as.integer(index(subToHUC))),
-                     col = abl.col,
-                     lty = 2)
-              abline(h   = 0,
-                     col = abl.col,
-                     lty = 1)
-            }
-            par(mar = c(5.1, 4.1, 4.1, 2.1))
+            # List of reactive inputs - saves values to list, which can then be fed into plotting functions
+            feederList <- list(sample_subHUCs = input$sample_subHUCs,
+                               alpha_slider = input$alpha_slider,
+                               slider_time = input$slider_time)
+            # plotting function
+            METsteps::shinyPlot_HUC_Time_Series_and_Difference(feederList. = feederList)
           })
           
           #Generate ET plot for specified HUC level for clicked HUC
           ####!!!!!! Import subHUC levels
-          subHUC10 <- vector(mode   = 'list',
-                             length = length(dnames))
+          subHUC10 <<- vector(mode   = 'list',
+                              length = length(dnames))
           for (i in 1:length(dnames)){
-            #Subset info
-                # fnames.sub         <- fileInfo %>%
-                #   dplyr::filter(dataName == dnames[i]) %>%
-                #   dplyr::filter(HUC      == as.numeric(input$HUC_select)) %>%
-                #   dplyr::filter(timeStep == timeStep) %>%
-                #   distinct(fnames)
-                # yfun <- function(x){
-                #   fileInfo$fnames[(fileInfo$dataName == dnames[i] & fileInfo$HUC == 8 & fileInfo$timeStep == timeStep)]}
-                # 
             fnames.sub <- fileInfo[(fileInfo$dataName == dnames[i] & fileInfo$HUC == as.numeric(input$HUC_select) & fileInfo$timeStep == timeStep),]
-            
+            if (nrow(fnames.sub) == 0){
+              fnames.sub <- fileInfo[(fileInfo$dataName == dnames[i] & fileInfo$HUC == 8 & fileInfo$timeStep == timeStep),]
+              
+            }
             path.f             <- file.path(path.feather,
                                             fnames.sub$fnames)
             
@@ -766,188 +584,22 @@ server <- function(input, output){
             tempHUC10          <- zoo::as.zoo(tempHUC10)
             index(tempHUC10)   <- ind
             #Save to list
-            subHUC10[[i]]      <- tempHUC10
-            names(subHUC10)[i] <- fnames.sub$data.name
+            subHUC10[[i]]      <<- tempHUC10
+            names(subHUC10)[i] <<- fnames.sub$data.name
           }
           
           output$plot2 <- renderPlot({
-            par(mar = c(5.1, 4.1, 4.1, 1.4))
-            if (is.null(input$slider_time)){
-              drange <- NULL
-            } else{
-              drange <- lubridate::decimal_date(as.Date(input$slider_time))
-            }
-            #subset reactive Data by matching the extensions of the list names to the selected HUC level
-            data.lineHUCS <- subHUC10
-            cols2keep <- 1:ncol(data.lineHUCS[[1]])
-            
-            #If more than 100 lines to plot, randomly sample down to 100
-            if (length(cols2keep) > 50){
-              if (ncol(subToHUC) <= 2){
-                cols2keep <- sample(x    = cols2keep,
-                                    size = 50)
-                samptext  <- 'Data resampled to n=50'
-              }else{
-                cols2keep <- sample(x    = cols2keep,
-                                    size = 25)
-                samptext <- 'Data resampled to n=25'
-              }
-            }else{
-              samptext <- ''
-            }
-            #collect max values from list
-            ylmax <- max(unlist(lapply(X = data.lineHUCS,
-                                       FUN = max,
-                                       na.rm = T)))
-            
-            progmax <- (length(data.lineHUCS)-1)*length(cols2keep)
-            withProgress(message = 'Plotting in progress',
-                         detail  = 'Please wait...',
-                         value   = 0, {
-                           #Get max for ylim
-                           ymaxx <- max(unlist(lapply(X   = data.lineHUCS,
-                                                      FUN = function(x) {
-                                                        return(max(x[,cols2keep], na.rm = T))
-                                                      })))
-                           plot(x    = (data.lineHUCS[[1]])[,cols2keep[1]],
-                                type = 'l',
-                                col  = scales::alpha(colour = cbPalette[1],
-                                                     alpha  = input$alpha_slider),
-                                lwd  = 1,
-                                lty  = 1,
-                                main = paste('HUC subsetted to HUC',
-                                             as.character(maphuc)),
-                                xaxs = "i",
-                                yaxs = "i",
-                                ylab = dataCategory,
-                                xlab = 'Time',
-                                xlim = drange,
-                                ylim = c(0, ymaxx)) #input$ylimmax_slider
-                           abline(v   = unique(as.integer(index(subToHUC))),
-                                  col = abl.col,
-                                  lty = 2)
-                           if (length(cols2keep) > 1){
-                             for (j in 2:length(cols2keep)){
-                               lines(x   = (data.lineHUCS[[1]])[,cols2keep[j]],
-                                     col = scales::alpha(colour = cbPalette[1],
-                                                         alpha  = input$alpha_slider),
-                                     lwd = 2)
-                               incProgress(1/progmax)
-                             }
-                           }
-                           if (length(data.lineHUCS) > 1){
-                             for (i in 2:length(data.lineHUCS)){
-                               for (j in 1:length(cols2keep)){
-                                 lines(x   = (data.lineHUCS[[i]])[,cols2keep[j]],
-                                       col = scales::alpha(colour = cbPalette[i],
-                                                           alpha  = input$alpha_slider),
-                                       lwd = 2)
-                                 incProgress(1/progmax)
-                               }
-                             }
-                             legend(x = 'topleft',
-                                    legend = samptext,
-                                    bty = 'n')
-                           }
-                         })
+            # List of reactive inputs - saves values to list, which can then be fed into plotting functions
+            feederList <- list(sample_subHUCs = input$sample_subHUCs,
+                           alpha_slider = input$alpha_slider,
+                           slider_time = input$slider_time)
+            # plotting function
+            METsteps::shinyPlot_HUC_subHUC_Plot(feederList. = feederList)
           })
           
           #Generate PErcentile and ECDF plots
           output$plot3 <- renderPlot({
-            #par(mfrow = c(1,2))
-            layout(mat     = matrix(data  = c(1,2,3,3),
-                                    nrow  = 2,
-                                    byrow = T),
-                   heights = c(0.85, 0.15))
-            par(mar = c(1, 2, 1.2, 2))
-            #Monthly quantile envelope plots
-            monthlylist.y <- vector(mode   = "list",
-                                    length = ncol(subToHUC))
-            for (i in 1:ncol(subToHUC)){
-              list.month <- vector(mode = 'list',
-                                   length = 12)
-              data.vec   <- subToHUC[,i]
-              months.all <- lubridate::month((lubridate::date_decimal(index(data.vec)+0.00001)))
-              
-              for (j in 1:12){
-                curmon          <- data.vec[months.all == j]
-                list.month[[j]] <- curmon
-              }
-              quants.25        <- unlist(lapply(X     = list.month,
-                                                FUN   = quantile,
-                                                probs = 0.25,
-                                                na.rm = T))
-              quants.75         <- unlist(lapply(X     = list.month,
-                                                 FUN   = quantile,
-                                                 probs = 0.75,
-                                                 na.rm = T))
-              quants            <- rbind(quants.25, quants.75)
-              meds              <- unlist(lapply(X     = list.month,
-                                                 FUN   = median,
-                                                 na.rm = T))
-              #Remove list
-              if (exists('list.month')) rm(list.month)
-              #reorder to start with oct
-              quants             <- quants[, c(10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9)]
-              meds               <- meds[c(10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9)]
-              xvals              <- c(1:12, 12, rev(1:12), 1)
-              
-              monthlylist.y[[i]] <- c(quants[1,], quants[2,12], rev(quants[2,]), quants[2,1])
-            }
-            
-            ymaxx <- max(unlist(lapply(X   = monthlylist.y,
-                                       FUN = max)))
-            plot(x    = 1,
-                 type = 'n',
-                 ylim = c(0, ymaxx),
-                 xlim = c(1, 12),
-                 xaxs = 'i',
-                 xaxt = 'n',
-                 ylab = dataCategory,
-                 xlab = '',
-                 main = '25-75th Percentile Monthly Ranges')
-            abline(v   = 2:11,
-                   col = abl.col,
-                   lty = 2)
-            axis(side   = 1,
-                 at     = 1:12,
-                 labels = c('Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'))
-            for (i in 1:ncol(subToHUC)){
-              polygon(x      = xvals,
-                      y      = monthlylist.y[[i]],
-                      col    = scales::alpha(colour = cbPalette[i],
-                                             alpha  = 0.5),
-                      border = NA)
-              lines(x   = meds,
-                    lty = 2)
-              points(x   = meds,
-                     pch = 16)
-            }
-            #ecdf plot
-            plot(x    = ecdf(as.numeric(subToHUC[,1])),
-                 col  = cbPalette[1],
-                 main = 'Empirical Cumulative Distribution Function')
-            if (ncol(subToHUC) > 1){
-              for (i in 2:ncol(subToHUC)){
-                plot(x   = ecdf(as.numeric(subToHUC[,i])),
-                     col = cbPalette[i],
-                     add = T)
-              }
-            }
-            #Add common legend
-            plot(x    = 1,
-                 type = 'n',
-                 axes = FALSE,
-                 xlab = '',
-                 ylab = '')
-            legend(x      = 'center',
-                   legend = dnames,
-                   inset  = 0,
-                   horiz  = TRUE,
-                   pch    = 15,
-                   col    = cbPalette[1:ncol(subToHUC)],
-                   pt.cex = 2,
-                   cex    = 1)
+            METsteps::shinyPlot_HUC_Mean_Percentile_and_ECDF()
           })
           
           #Generate Taylor plots
@@ -973,6 +625,9 @@ server <- function(input, output){
                 METsteps::taylor(allData   = allData,
                                  dataNames = colnames(allData),
                                  dataColors = ttColors)
+              })
+              output$ShirleysPlot <- renderPlot({
+                plot(1:10, type = 'l')
               })
             }
           })
