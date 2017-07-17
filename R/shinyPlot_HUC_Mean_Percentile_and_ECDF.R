@@ -13,9 +13,16 @@ shinyPlot_HUC_Mean_Percentile_and_ECDF   <- function(default. = FALSE,
                                                      dataCategory. = dataCategory,
                                                      ablCol = 'darkgrey',
                                                      cbPalette. = cbPalette,
-                                                     dnames. = dnames){
+                                                     dnames. = dnames,
+                                                     ...){
   if (default.){
-    par(mfrow = c(1, 2))
+    # par(mfrow = c(1, 2))
+    # par(mar = c(1, 2, 2.5, 2))
+    layout(mat     = matrix(data  = c(1,2,3,3),
+                            nrow  = 2,
+                            byrow = T),
+           heights = c(0.85, 0.15))
+    par(mar = c(1, 2, 3.5, 2))
     plot(x    = 1,
          type = 'n',
          ylim = c(0,100),
@@ -45,7 +52,7 @@ shinyPlot_HUC_Mean_Percentile_and_ECDF   <- function(default. = FALSE,
                             nrow  = 2,
                             byrow = T),
            heights = c(0.85, 0.15))
-    par(mar = c(1, 2, 1.2, 2))
+    par(mar = c(1, 2, 3.5, 2))
     #Monthly quantile envelope plots
     monthlylist.y <- vector(mode   = "list",
                             length = ncol(subToHUC.))

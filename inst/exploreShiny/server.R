@@ -50,6 +50,7 @@ server <- function(input, output){
                    choices = c(NA, NA, NA))
   })
   # default x-axis choices - just so no movement when loading maps
+  # default plots
   output$time_available <- renderUI({
     if (exists('subData')){
       times.dec <- unique(as.integer(index(subData[[1]])))
@@ -65,8 +66,46 @@ server <- function(input, output){
                    min = paste0(vrange[1], '-01-01'),
                    max = paste0(vrange[2], '-01-01'))
   })
-  
-  
+  output$plot1_input <- renderUI({
+    div(style = 'height:50px;',
+        selectInput(inputId = 'plot1_select',
+                    label = 'Select Plot:',
+                    width = '30%',
+                    choices = METsteps::shinyPlotExtract(numD = 'HUC'),
+                    selected = "shinyPlot_HUC_Time_Series_and_Difference"))
+  })
+  output$plot2_input <- renderUI({
+    div(style = 'height:50px;',
+        selectInput(inputId = 'plot2_select',
+                    label = 'Select Plot:',
+                    width = '30%',
+                    choices = METsteps::shinyPlotExtract(numD = 'HUC'),
+                    selected = "shinyPlot_HUC_subHUC_Plot"))
+  })
+  output$plot3_input <- renderUI({
+    div(style = 'height:50px;',
+        selectInput(inputId = 'plot3_select',
+                    label = 'Select Plot:',
+                    width = '30%',
+                    choices = METsteps::shinyPlotExtract(numD = 'HUC'),
+                    selected = "shinyPlot_HUC_Mean_Percentile_and_ECDF"))
+  })
+  # function to produce extra inputs as required by certain plots
+  uiOptionsFun <- function(x){
+    if (!is.null(x)){
+      if (x == "shinyPlot_HUC_subHUC_Plot"){
+        div(style = 'height:1px;',
+            checkboxInput(inputId = 'sample_subHUCs',
+                          label = 'Sample sub-HUCs to decrease render time?',
+                          value = TRUE)
+        )
+      }
+    }
+  }
+  # Add extra inputs as necessary according to uiOptionsFun
+  output$uiOptionsforPlot1 <- renderUI({uiOptionsFun(input$plot1_select)})
+  output$uiOptionsforPlot2 <- renderUI({uiOptionsFun(input$plot2_select)})
+  output$uiOptionsforPlot3 <- renderUI({uiOptionsFun(input$plot3_select)})
   
   ##### Generate Default plots on Main Panel
   # Render empty leaflet map
@@ -94,13 +133,27 @@ server <- function(input, output){
   multiplot.cex <- 1.8
   multiplot.lab <- 1.8
   output$plot1 <- renderPlot({
-    METsteps::shinyPlot_HUC_Time_Series_and_Difference(default = T)
+    if (is.null(input$plot1_select)){
+      NULL
+    }else{
+      get(input$plot1_select)(default = T)
+    }
   })
   output$plot2 <- renderPlot({
-    METsteps::shinyPlot_HUC_subHUC_Plot(default. = T)
+    if (is.null(input$plot2_select)){
+      NULL
+    }else{
+      get(input$plot2_select)(default = T)
+    }
+    #METsteps::shinyPlot_HUC_subHUC_Plot(default. = T)
   })
   output$plot3 <- renderPlot({
-    shinyPlot_HUC_Mean_Percentile_and_ECDF(default. = T)
+    if (is.null(input$plot3_select)){
+      NULL
+    }else{
+      get(input$plot3_select)(default = T)
+    }
+    #shinyPlot_HUC_Mean_Percentile_and_ECDF(default. = T)
   })
   # Note that no plots have been created yet
   plotsCreated <- F
@@ -140,14 +193,29 @@ server <- function(input, output){
       multiplot.cex <- 1.8
       multiplot.lab <- 1.8
       output$plot1 <- renderPlot({
-        METsteps::shinyPlot_HUC_Time_Series_and_Difference(default = T)
+        if (is.null(input$plot1_select)){
+          NULL
+        }else{
+          get(input$plot1_select)(default = T)
+        }
+        #METsteps::shinyPlot_HUC_Time_Series_and_Difference(default = T)
       })
       
       output$plot2 <- renderPlot({
-        METsteps::shinyPlot_HUC_subHUC_Plot(default. = T)
+        if (is.null(input$plot2_select)){
+          NULL
+        }else{
+          get(input$plot2_select)(default = T)
+        }
+        #METsteps::shinyPlot_HUC_subHUC_Plot(default. = T)
       })
       output$plot3 <- renderPlot({
-        METsteps::shinyPlot_HUC_Mean_Percentile_and_ECDF(default. = T)
+        if (is.null(input$plot3_select)){
+          NULL
+        }else{
+          get(input$plot3_select)(default = T)
+        }
+        #METsteps::shinyPlot_HUC_Mean_Percentile_and_ECDF(default. = T)
       })
     }
     plotsCreated <<- T
@@ -553,7 +621,8 @@ server <- function(input, output){
                                alpha_slider = input$alpha_slider,
                                slider_time = input$slider_time)
             # plotting function
-            METsteps::shinyPlot_HUC_Time_Series_and_Difference(feederList. = feederList)
+            get(input$plot1_select)(feederList. = feederList)
+            #METsteps::shinyPlot_HUC_Time_Series_and_Difference(feederList. = feederList)
           })
           
           #Generate ET plot for specified HUC level for clicked HUC
@@ -594,12 +663,19 @@ server <- function(input, output){
                            alpha_slider = input$alpha_slider,
                            slider_time = input$slider_time)
             # plotting function
-            METsteps::shinyPlot_HUC_subHUC_Plot(feederList. = feederList)
+            get(input$plot2_select)(feederList. = feederList)
+            #METsteps::shinyPlot_HUC_subHUC_Plot(feederList. = feederList)
           })
           
           #Generate PErcentile and ECDF plots
           output$plot3 <- renderPlot({
-            METsteps::shinyPlot_HUC_Mean_Percentile_and_ECDF()
+            # List of reactive inputs - saves values to list, which can then be fed into plotting functions
+            feederList <- list(sample_subHUCs = input$sample_subHUCs,
+                               alpha_slider = input$alpha_slider,
+                               slider_time = input$slider_time)
+            # plotting function
+            get(input$plot3_select)(feederList. = feederList)
+            #METsteps::shinyPlot_HUC_Mean_Percentile_and_ECDF()
           })
           
           #Generate Taylor plots

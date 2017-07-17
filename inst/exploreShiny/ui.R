@@ -115,34 +115,42 @@ ui <- dashboardPage(
                      textOutput(outputId    = "textWarning")),
                  leafletOutput(outputId = "mymap"),
                  p(),
+                 uiOutput(outputId = 'plot3_input'),
+                 uiOutput(outputId = 'uiOptionsforPlot3'),
                  plotOutput(outputId    = 'plot3')),
-               box(plotOutput(outputId = 'plot1'),
-                   tabsetPanel(
-                     tabPanel(title = 'Sub-HUCs',
-                              checkboxInput(inputId = 'sample_subHUCs',
-                                            label = 'Sample sub-HUCs to increase plotting speed?',
-                                            value = TRUE),
-                              plotOutput(outputId = 'plot2',
-                                         #add the hover options
-                                         hover = hoverOpts(
-                                           id = "plot2_hover",
-                                           delay = 400,
-                                           nullOutside = TRUE)
-                                         ),
-                              # textOutput(outputId = 'hoverText')
-                              verbatimTextOutput(outputId = "info",
-                                                 placeholder = T)
-                              ),
-                     tabPanel(title = 'Taylor',
-                              uiOutput(outputId = "datasets_for_Taylor"),
-                              plotOutput(outputId = 'taylorPlotclick'),
-                              h6('Taylor, K.E. Summarizing multiple aspects of model performance in a 
-                                 single diagram (2001). Journal of Geophysical Research.')
-                     ),
-                     tabPanel(title = 'Shirley',
-                              plotOutput(outputId = 'ShirleysPlot')
-                     )
-                     )
+               box(
+                 uiOutput(outputId = 'plot1_input'),
+                 uiOutput(outputId = 'uiOptionsforPlot1'),
+                 plotOutput(outputId = 'plot1'),
+                 uiOutput(outputId = 'plot2_input'),
+                 uiOutput(outputId = 'uiOptionsforPlot2'),  #Not currently in use
+                 plotOutput(outputId = 'plot2')
+                   # tabsetPanel(
+                   #   tabPanel(title = 'Sub-HUCs',
+                   #            checkboxInput(inputId = 'sample_subHUCs',
+                   #                          label = 'Sample sub-HUCs to increase plotting speed?',
+                   #                          value = TRUE),
+                   #            plotOutput(outputId = 'plot2',
+                   #                       #add the hover options
+                   #                       hover = hoverOpts(
+                   #                         id = "plot2_hover",
+                   #                         delay = 400,
+                   #                         nullOutside = TRUE)
+                   #                       )
+                   #            # textOutput(outputId = 'hoverText')
+                   #            # verbatimTextOutput(outputId = "info",
+                   #            #                    placeholder = T)
+                   #            ),
+                   #   tabPanel(title = 'Taylor',
+                   #            uiOutput(outputId = "datasets_for_Taylor"),
+                   #            plotOutput(outputId = 'taylorPlotclick'),
+                   #            h6('Taylor, K.E. Summarizing multiple aspects of model performance in a 
+                   #               single diagram (2001). Journal of Geophysical Research.')
+                   #   ),
+                   #   tabPanel(title = 'Shirley',
+                   #            plotOutput(outputId = 'ShirleysPlot')
+                   #   )
+                   #   )
                    )
                )
              )

@@ -5,14 +5,13 @@
 \title{Convert to feather}
 \usage{
 zooHUCtoFeather(zoo.obj,
-  Shiny.path = "C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/")
+  featherPath = "C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/FeatherFiles")
 }
 \arguments{
 \item{zoo.obj}{Either output from downscale_HUC10() function (list object of zoo-format dataframes) or
 vector of paths to locations of csv files.}
 
-\item{Shiny.path}{Path to save location.  Defaults to current working directory.  Set to your RShiny app directory.
-Will create a folder for feather files named exactly 'FeatherFiles' if not already available.}
+\item{featherPath}{Path to containing folder for feather files to be used by Shiny application.}
 }
 \value{
 List of tables of HUC 2-8 means in 'zoo' format.  Time-step x HUC-10.

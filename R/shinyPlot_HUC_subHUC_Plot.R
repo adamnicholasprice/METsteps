@@ -17,7 +17,8 @@ shinyPlot_HUC_subHUC_Plot   <- function(default. = FALSE,
                                         cbPalette. = cbPalette,
                                         maphuc. = maphuc,
                                         dataCategory. = dataCategory,
-                                        ablCol = 'darkgrey'){
+                                        ablCol = 'darkgrey',
+                                        ...){
   
   # default. = FALSE,
   # subToHUC. = subToHUC,

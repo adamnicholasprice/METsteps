@@ -17,10 +17,10 @@
 shinyPlotExtract   <- function(numD = NULL, pkg = 'METsteps'){
   require(METsteps)
   if (!is.null(numD)){
-    if (!(numD %in% c('one', 'two', 'poly'))) stop("Argument 'numD' must be one of the following: NULL, 'one', 'two', or 'poly'.")
+    if (!(numD %in% c('HUC'))) stop("Argument 'numD' must be one of the following: NULL, or 'HUC'.")
   }
   x <- ls('package:METsteps')
-  x <- x[substr(x, 1, 9) == 'shinyFun_']
+  x <- x[substr(x, 1, 10) == 'shinyPlot_']
   if (length(x) > 0){
     retData <- function(y){
       z <- strsplit(x     = y,
