@@ -53,13 +53,19 @@ shinyPlot_HUC_Mean_Percentile_and_ECDF   <- function(default. = FALSE,
                             byrow = T),
            heights = c(0.85, 0.15))
     par(mar = c(1, 2, 3.5, 2))
+    # Calculate mean values
+    ensembleMeans <- zoo::zoo(rowMeans(subToHUC.))
+    zoo::index(ensembleMeans) <- zoo::index(subToHUC.)
+    subToHUC.2 <- cbind(subToHUC., ensembleMeans)
     #Monthly quantile envelope plots
     monthlylist.y <- vector(mode   = "list",
-                            length = ncol(subToHUC.))
-    for (i in 1:ncol(subToHUC.)){
+                            length = ncol(subToHUC.2))
+    medList <- monthlylist.y
+    
+    for (i in 1:ncol(subToHUC.2)){
       list.month <- vector(mode = 'list',
                            length = 12)
-      data.vec   <- subToHUC.[,i]
+      data.vec   <- subToHUC.2[,i]
       months.all <- lubridate::month((lubridate::date_decimal(index(data.vec)+0.00001)))
       
       for (j in 1:12){
@@ -75,14 +81,14 @@ shinyPlot_HUC_Mean_Percentile_and_ECDF   <- function(default. = FALSE,
                                          probs = 0.75,
                                          na.rm = T))
       quants            <- rbind(quants.25, quants.75)
-      meds              <- unlist(lapply(X     = list.month,
+      medList[[i]]      <- unlist(lapply(X     = list.month,
                                          FUN   = median,
                                          na.rm = T))
       #Remove list
       if (exists('list.month')) rm(list.month)
       #reorder to start with oct
       quants             <- quants[, c(10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9)]
-      meds               <- meds[c(10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9)]
+      medList[[i]]       <- medList[[i]][c(10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9)]
       xvals              <- c(1:12, 12, rev(1:12), 1)
       
       monthlylist.y[[i]] <- c(quants[1,], quants[2,12], rev(quants[2,]), quants[2,1])
@@ -105,41 +111,58 @@ shinyPlot_HUC_Mean_Percentile_and_ECDF   <- function(default. = FALSE,
     axis(side   = 1,
          at     = 1:12,
          labels = c('Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'))
-    for (i in 1:ncol(subToHUC.)){
+    
+    for (i in 1:ncol(subToHUC.2)){
+      if (i != ncol(subToHUC.2)){
+        colour <- cbPalette.[i]
+      }else{
+        colour = 'darkgrey'
+      }
+      
       polygon(x      = xvals,
               y      = monthlylist.y[[i]],
-              col    = scales::alpha(colour = cbPalette.[i],
+              col    = scales::alpha(colour = colour,
                                      alpha  = 0.5),
               border = NA)
-      lines(x   = meds,
-            lty = 2)
-      points(x   = meds,
-             pch = 16)
+      lines(x   = medList[[i]],
+            lty = 2,
+            lwd = 0.5)
+      points(x   = medList[[i]],
+             pch = 16,
+             cex = 0.75)
     }
     #ecdf plot
-    plot(x    = ecdf(as.numeric(subToHUC.[,1])),
+    plot(x    = ecdf(as.numeric(subToHUC.2[,1])),
          col  = cbPalette.[1],
          main = 'Empirical Cumulative Distribution Function')
-    if (ncol(subToHUC.) > 1){
-      for (i in 2:ncol(subToHUC.)){
-        plot(x   = ecdf(as.numeric(subToHUC.[,i])),
-             col = cbPalette.[i],
+    if (ncol(subToHUC.2) > 1){
+      for (i in 2:ncol(subToHUC.2)){
+        if (i != ncol(subToHUC.2)){
+          colour <- cbPalette.[i]
+        }else{
+          colour = 'darkgrey'
+        }
+        plot(x   = ecdf(as.numeric(subToHUC.2[,i])),
+             col = colour,
              add = T)
       }
     }
     #Add common legend
+    par(mar = c(2, 1, 1, 1))
     plot(x    = 1,
          type = 'n',
          axes = FALSE,
          xlab = '',
-         ylab = '')
+         ylab = '',
+         bty = 'n')
     legend(x      = 'center',
-           legend = dnames.,
+           legend = c(dnames., 'Ensemble Mean'),
            inset  = 0,
            horiz  = TRUE,
            pch    = 15,
-           col    = cbPalette.[1:ncol(subToHUC.)],
+           col    = c(cbPalette.[1:(ncol(subToHUC.2)-1)], 'darkgrey'),
            pt.cex = 2,
-           cex    = 1)
+           cex    = 1,
+           bty = 'n')
   }
 }

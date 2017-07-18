@@ -125,6 +125,9 @@ ui <- dashboardPage(
                  uiOutput(outputId = 'plot2_input'),
                  uiOutput(outputId = 'uiOptionsforPlot2'),  #Not currently in use
                  plotOutput(outputId = 'plot2')
+                 
+                 
+                 
                    # tabsetPanel(
                    #   tabPanel(title = 'Sub-HUCs',
                    #            checkboxInput(inputId = 'sample_subHUCs',

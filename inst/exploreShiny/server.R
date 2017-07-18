@@ -102,6 +102,7 @@ server <- function(input, output){
       }
     }
   }
+  
   # Add extra inputs as necessary according to uiOptionsFun
   output$uiOptionsforPlot1 <- renderUI({uiOptionsFun(input$plot1_select)})
   output$uiOptionsforPlot2 <- renderUI({uiOptionsFun(input$plot2_select)})
