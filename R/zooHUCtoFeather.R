@@ -17,7 +17,7 @@ zooHUCtoFeather<- function(zoo.obj,
   
   #Define save.path
   if (substrRight(featherPath) != '/') featherPath = paste0(featherPath, '/')
-  save.path <- paste0(Shiny.path, 'FeatherFiles')
+  #save.path <- paste0(Shiny.path, 'FeatherFiles')
 
   # If savepath does not exist, prompt user
   if (!dir.exists(featherPath)) stop(paste('featherPath', featherPath, 'does not exist.'))
