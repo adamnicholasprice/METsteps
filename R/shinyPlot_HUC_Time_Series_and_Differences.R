@@ -15,9 +15,10 @@ shinyPlot_HUC_Time_Series_and_Difference   <- function(default. = FALSE,
                                                        colDif = 'firebrick',
                                                        HCU. = HCU,
                                                        dataCategory. = dataCategory,
-                                                       multiplot.cex = 1.8,
-                                                       multiplot.lab = 1.8,
-                                                       cex.main = 1.8){
+                                                       multiplot.cex = 1.4,
+                                                       multiplot.lab = 1.4,
+                                                       cex.main = 1.8,
+                                                       ...){
   # Extract sliderTime. from feederList
   if (!is.null(feederList.)){
     sliderTime. <- feederList.$slider_time
@@ -44,7 +45,7 @@ shinyPlot_HUC_Time_Series_and_Difference   <- function(default. = FALSE,
          type     = 'n',
          main     = '',
          xaxs     = "i",
-         ylab     = 'units',
+         ylab     = '(mm)',
          xlim     = drange,
          xlab     = '',
          xaxt     = 'n',
@@ -56,19 +57,21 @@ shinyPlot_HUC_Time_Series_and_Difference   <- function(default. = FALSE,
          type     = 'n',
          main     = '',
          xaxs     = "i",
-         ylab     = 'Difference',
+         ylab     = 'Diff (mm)',
          xlab     = '',
          xlim     = drange,
          xaxt     = 'n',
-         cex.axis = multiplot.cex,
+         yaxt     = 'n',
          cex.lab  = multiplot.lab)
-    #-- Percent difference plot
+    axis(side = 4,
+         cex.axis = multiplot.cex)
+    #--  sd plot
     par(mar = c(2, 6.2, 0, 2.1))
     plot(x        = 1,
          type     = 'n',
          main     = '',
          xaxs     = "i",
-         ylab     = 'Percent\nDifference',
+         ylab     = 'Standard\nDev',
          xlab     = 'Time',
          xlim     = drange,
          cex.axis = multiplot.cex,
@@ -94,7 +97,7 @@ shinyPlot_HUC_Time_Series_and_Difference   <- function(default. = FALSE,
          col      = col[1],
          main     = paste('HUC', HCU.),
          xaxs     = "i",
-         ylab     = dataCategory.,
+         ylab     = paste0(dataCategory.,'\n(mm)'),
          xlim     = drange,
          ylim     = range(x, na.rm = T),
          xlab     = '',
@@ -152,11 +155,15 @@ shinyPlot_HUC_Time_Series_and_Difference   <- function(default. = FALSE,
            type     = 'n',
            main     = '',
            xaxs     = 'i',
-           ylab     = 'Difference (mm)',
+           ylab     = 'Diff (mm)',
            xlab     = '',
+           xaxt     = 'n',
+           yaxt     = 'n',
            xlim     = drange,
            cex.axis = multiplot.cex,
            cex.lab  = multiplot.lab)
+      axis(side = 4,
+           cex.axis = multiplot.cex)
       abline(v   = unique(as.integer(zoo::index(x))),
              col = ablCol,
              lty = 2)
@@ -168,8 +175,9 @@ shinyPlot_HUC_Time_Series_and_Difference   <- function(default. = FALSE,
            col      = colDif,
            main     = '',
            xaxs     = "i",
-           ylab     = 'Difference (mm)',
+           ylab     = 'Diff (mm)',
            xlab     = '',
+           xaxt     = 'n',
            xlim     = drange,
            cex.axis = multiplot.cex,
            cex.lab  = multiplot.lab,
@@ -197,10 +205,10 @@ shinyPlot_HUC_Time_Series_and_Difference   <- function(default. = FALSE,
            col      = colDif,
            main     = '',
            xaxs     = "i",
-           ylab     = 'Difference (mm)',
+           ylab     = 'Diff (mm)',
            xlab     = '',
            xlim     = drange,
-           #xaxt     = 'n',
+           xaxt     = 'n',
            cex.axis = multiplot.cex,
            cex.lab  = multiplot.lab,
            lwd      = 2,
@@ -209,10 +217,53 @@ shinyPlot_HUC_Time_Series_and_Difference   <- function(default. = FALSE,
       for (i in 2:ncol(difmat)){
         lines(x    = difmat[,i],
               xaxs = 'i',
-              col  = col.dif,
+              col  = colDif,
               lwd  = 2,
               lty  = i)
       }
+      abline(v   = unique(as.integer(index(x))),
+             col = ablCol,
+             lty = 2)
+      abline(h   = 0,
+             col = ablCol,
+             lty = 1)
+    }
+    
+    #------ sd Plot
+    if (ncol(x) > 1){
+      par(mar = c(2, 6.2, 0, 2.1))
+      #Calculate standard deviation
+      sdZoo <- apply(X = x,
+                     MARGIN = 1,
+                     FUN = sd,
+                     na.rm = T)
+      sdZoo <- zoo::zoo(sdZoo)
+      zoo::index(sdZoo) <- zoo::index(x)
+      plot(x        = sdZoo,
+           type     = 'l',
+           main     = '',
+           xaxs     = "i",
+           ylab     = 'Standard\nDev',
+           xlab     = 'Time',
+           xlim     = drange,
+           cex.axis = multiplot.cex,
+           cex.lab  = multiplot.lab)
+      abline(v   = unique(as.integer(index(x))),
+             col = ablCol,
+             lty = 2)
+      abline(h   = 0,
+             col = ablCol,
+             lty = 1)
+    }else{
+      plot(x        = x,
+           type     = 'n',
+           main     = '',
+           xaxs     = "i",
+           ylab     = 'Standard\nDev',
+           xlab     = 'Time',
+           xlim     = drange,
+           cex.axis = multiplot.cex,
+           cex.lab  = multiplot.lab)
       abline(v   = unique(as.integer(index(x))),
              col = ablCol,
              lty = 2)
