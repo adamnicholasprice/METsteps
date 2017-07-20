@@ -114,16 +114,48 @@ ui <- dashboardPage(
                  div(style = 'color:red;',
                      textOutput(outputId    = "textWarning")),
                  leafletOutput(outputId = "mymap"),
-                 p(),
-                 uiOutput(outputId = 'plot3_input'),
-                 uiOutput(outputId = 'uiOptionsforPlot3'),
+                 div(style = 'height:1px;',
+                     tags$hr()),
+                 fluidRow(
+                   column(4, uiOutput(outputId = 'plot3_input')),
+                   column(5, uiOutput(outputId = 'uiOptionsforPlot3')),
+                   column(2, 
+                          div(style = 'height:12px', p()),
+                          actionButton(inputId = 'ExportPlot3',
+                                       label = 'Figure',
+                                       icon = icon("download"),
+                                       width = '100%'),
+                          offset = 1)
+                 ),
                  plotOutput(outputId    = 'plot3')),
                box(
-                 uiOutput(outputId = 'plot1_input'),
-                 uiOutput(outputId = 'uiOptionsforPlot1'),
+                 fluidRow(
+                   column(4, uiOutput(outputId = 'plot1_input')),
+                   column(5, uiOutput(outputId = 'uiOptionsforPlot1')),
+                   column(2, 
+                          div(style = 'height:12px', p()),
+                          actionButton(inputId = 'ExportPlot1',
+                                       label = 'Figure',
+                                       icon = icon('download'),
+                                       width = '100%'),
+                          offset = 1)
+                 ),
                  plotOutput(outputId = 'plot1'),
-                 uiOutput(outputId = 'plot2_input'),
-                 uiOutput(outputId = 'uiOptionsforPlot2'),  #Not currently in use
+                 div(style = 'height:1px;',
+                     tags$hr()),
+                 fluidRow(
+                   column(4, uiOutput(outputId = 'plot2_input')),
+                   column(5, uiOutput(outputId = 'uiOptionsforPlot2')),
+                   column(2, 
+                          div(style = 'height:12px', p()),
+                          actionButton(inputId = 'ExportPlot2',
+                                       label = 'Figure',
+                                       icon = icon('download'),
+                                       width = '100%'),
+                          offset = 1)
+                 ),
+                 #uiOutput(outputId = 'plot2_input'),
+                 #uiOutput(outputId = 'uiOptionsforPlot2'),  #Not currently in use
                  plotOutput(outputId = 'plot2')
                  
                  

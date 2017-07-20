@@ -50,7 +50,6 @@ server <- function(input, output){
                    choices = c(NA, NA, NA))
   })
   # default x-axis choices - just so no movement when loading maps
-  # default plots
   output$time_available <- renderUI({
     if (exists('subData')){
       times.dec <- unique(as.integer(index(subData[[1]])))
@@ -66,19 +65,25 @@ server <- function(input, output){
                    min = paste0(vrange[1], '-01-01'),
                    max = paste0(vrange[2], '-01-01'))
   })
+  # default plots
   output$plot1_input <- renderUI({
     div(style = 'height:50px;',
         selectInput(inputId = 'plot1_select',
                     label = 'Select Plot:',
-                    width = '30%',
+                    width = '100%',
                     choices = METsteps::shinyPlotExtract(numD = 'HUC'),
                     selected = "shinyPlot_HUC_Time_Series_and_Difference"))
   })
   output$plot2_input <- renderUI({
+    # tags$head(
+    #   tags$style(type="text/css",
+    #              "label.control-label, .selectize-control.single{ display: table-cell; text-align: center; vertical-align: middle; } .form-group { display: table-row;}")
+    # ),
     div(style = 'height:50px;',
         selectInput(inputId = 'plot2_select',
                     label = 'Select Plot:',
-                    width = '30%',
+                    #label = '',
+                    width = '100%',
                     choices = METsteps::shinyPlotExtract(numD = 'HUC'),
                     selected = "shinyPlot_HUC_subHUC_Plot"))
   })
@@ -86,27 +91,38 @@ server <- function(input, output){
     div(style = 'height:50px;',
         selectInput(inputId = 'plot3_select',
                     label = 'Select Plot:',
-                    width = '30%',
+                    width = '100%',
                     choices = METsteps::shinyPlotExtract(numD = 'HUC'),
                     selected = "shinyPlot_HUC_Mean_Percentile_and_ECDF"))
   })
   # function to produce extra inputs as required by certain plots
-  uiOptionsFun <- function(x){
+  uiOptionsFun <- function(x, dnames. = dnames){
     if (!is.null(x)){
       if (x == "shinyPlot_HUC_subHUC_Plot"){
-        div(style = 'height:1px;',
-            checkboxInput(inputId = 'sample_subHUCs',
-                          label = 'Sample sub-HUCs to decrease render time?',
-                          value = TRUE)
+        div(#style = 'height:50px;',
+          radioButtons(inputId = 'sample_subHUCs',
+                        label = 'Sample sub-HUCs to decrease render time?',
+                        choices = list(Yes = TRUE, No = FALSE),
+                       selected = TRUE,
+                        width = '100%',
+                       inline = TRUE)
+        )
+      }else if (x == "shinyPlot_HUC_Taylor_Diagram"){
+        if (!exists('dnames.')){dnames. = NA}
+        div(style = 'height:50px;',
+            selectInput(inputId = 'select_ref',
+                        label = "Select 'reference' product:",
+                        width = '70%',
+                        choices = dnames.)
         )
       }
     }
   }
   
   # Add extra inputs as necessary according to uiOptionsFun
-  output$uiOptionsforPlot1 <- renderUI({uiOptionsFun(input$plot1_select)})
-  output$uiOptionsforPlot2 <- renderUI({uiOptionsFun(input$plot2_select)})
-  output$uiOptionsforPlot3 <- renderUI({uiOptionsFun(input$plot3_select)})
+  output$uiOptionsforPlot1 <- renderUI({uiOptionsFun(x = input$plot1_select, dnames. = NA)})
+  output$uiOptionsforPlot2 <- renderUI({uiOptionsFun(x = input$plot2_select, dnames. = NA)})
+  output$uiOptionsforPlot3 <- renderUI({uiOptionsFun(x = input$plot3_select, dnames. = NA)})
   
   ##### Generate Default plots on Main Panel
   # Render empty leaflet map
@@ -510,14 +526,12 @@ server <- function(input, output){
   })
   
   
-  
   ##### Reactive Create New Map
   newMap <- observeEvent(input$goNewMap, {
     output$plotsCreated <- reactive({
       FALSE
     })
   })
-  
   
   
   ##### Response to clicking "highlight individual HUC regions" button
@@ -541,7 +555,6 @@ server <- function(input, output){
   })
   
   
-  
   ##### Response to clicking "clear highlight" button
   remove.highlight <- observeEvent(input$removeManHighlights, {
     if (length(manHighIds) > 0){
@@ -553,10 +566,15 @@ server <- function(input, output){
   })
   
   
-  
   ##### Response to clicking (selecting) a polygon interactively  <- this is where most plotting functions will go
   observe({
     click <- input$mymap_shape_click
+    # Add extra inputs as necessary according to uiOptionsFun
+    if (exists('dnames')){
+      output$uiOptionsforPlot1 <- renderUI({uiOptionsFun(x = input$plot1_select, dnames. = dnames)})
+      output$uiOptionsforPlot2 <- renderUI({uiOptionsFun(x = input$plot2_select, dnames. = dnames)})
+      output$uiOptionsforPlot3 <- renderUI({uiOptionsFun(x = input$plot3_select, dnames. = dnames)})
+    }
     
     #If click value is 'NULL' (when clicked between polygons) dont return any plots. Otherwise, continue.
     if (is.null(click) == FALSE){
