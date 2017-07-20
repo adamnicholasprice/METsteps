@@ -227,3 +227,27 @@ shinyFun_poly_CV    <- function(z){
                     },
                     na.rm  = T)))
 }
+
+#' Lapply Version of Coefficient of Variation
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+
+shinyFUN_one_SLOPE <- function(x = subToHUC, alpha = 0.05, insigValue = NA){
+  #where x is a single regular time-series dataset
+  len <<- (1:length(x[,1]))
+  mod <<- lm(len~x[,1])
+  cfs <<- (summary(mod))$coefficients
+  slope <<- cfs[2,1]
+  Pr <<- cfs[2,4]
+  
+  # if the p-value (Pr) is less than alpha (standard is to use 0.05) then slope value is not significant and return a 0
+  # could maybe also return NA?
+  if (Pr < alpha){
+    return(slope)
+  }else{
+    return(insigValue)
+        }
+    }
+
