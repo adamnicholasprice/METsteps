@@ -158,10 +158,21 @@ downscaleHUC10 <- function(HUC10monthly){
                                FUN = convHUC)
       
       # Reformat data from list to matrix format
-      HUC.conv <- matrix(data  = unlist(out),
-                         byrow = T,
-                         nrow  = length(get(paste0('HUC',cur.HUC,'.info'))),
-                         ncol  = ncol(HUC10.data))
+      #2093 bad
+      if (length(unique(unlist(lapply(out, length)))) == 1){
+        HUC.conv <- matrix(data  = unlist(out),
+                           byrow = T,
+                           nrow  = length(get(paste0('HUC',cur.HUC,'.info'))),
+                           ncol  = ncol(HUC10.data))
+      }else{
+        HUC.conv <- matrix(data = NA,
+                           nrow = length(get(paste0('HUC',cur.HUC,'.info'))),
+                           ncol = ncol(HUC10.data))
+        for (i in 1:nrow(HUC.conv)){
+          HUC.conv[i,] = out[[i]]
+        }
+      }
+      
       
       # Convert matrix to timeseries zoo object
       # HUC.ts <- stats::ts(data      = t(HUC.conv),
