@@ -20,8 +20,7 @@ shinyPlot_HUC_Taylor_Diagram <- function(default. = FALSE,
                               model = subToHUC.[,2],
                               col = cbPalette.[2],
                               pcex = 2,
-                              mar = c(5,7,5,7),
-                              pos.cor = FALSE)
+                              mar = c(5,7,5,7))
     }else{
       frame()
       text(0.5,0.5,"Two or more datasets required for Taylor diagrams", col = 'red')
@@ -32,8 +31,7 @@ shinyPlot_HUC_Taylor_Diagram <- function(default. = FALSE,
                                 model = subToHUC.[,i],
                                 add = TRUE,
                                 col = cbPalette.[i],
-                                pcex = 2
-                                pos.cor = FALSE)
+                                pcex = 2)
       }
     }
   }
