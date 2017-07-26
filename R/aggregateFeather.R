@@ -70,7 +70,11 @@ aggregateFeather <- function(fNames,
     newZ <- aggregate(x = z,
                       by = by,
                       FUN = sum)
-    index(newZ) <- as.Date(paste0(index(newZ), '-01-01'))
+    if (to == 'month'){
+      index(newZ) <- as.Date(index(newZ))
+    }else if (to == 'year'){
+      index(newZ) <- as.Date(paste0(index(newZ), '-01-01'))
+    }
     
     # return result
     return(newZ)
@@ -118,7 +122,7 @@ aggregateFeather <- function(fNames,
   # write feather files if requested
   if (writeFeather){
     for (i in 1:length(rr)){
-      feather::write_feather(rr[[i]], path = paste0(fPath, names(rr)[i]))
+      feather::write_feather(as.data.frame(rr[[i]]), path = paste0(fPath, names(rr)[i]))
     }
   }
   

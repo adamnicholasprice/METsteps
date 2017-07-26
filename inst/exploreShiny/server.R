@@ -7,11 +7,65 @@ server <- function(input, output){
   output$products_available <- renderUI({
     fileInfo.sub <- fileInfo %>%
       filter(dataCategory == input$category_select) %>%
-      filter(timeStep     == input$tstep_select)
-    checkboxGroupInput(inputId  = 'data_select',
-                       label    = 'Select datasets to compare',
-                       choices  = unique(fileInfo.sub$dataName),
-                       selected = c('MOD16-A2', 'SSEBop'))
+      filter(timeStep     == input$tstep_select) %>%
+      distinct(dataName)
+    ht <- (50 + 23*(nrow(fileInfo.sub)))
+    if (nrow(fileInfo.sub) == 0){
+      div(style = paste0('height:', ht, 'px; color:red;'),
+          checkboxGroupInput(inputId  = 'data_select',
+                             label    = 'No datasets for selected Component and Time Step',
+                             choices  = fileInfo.sub$dataName,
+                             selected = c('MOD16-A2', 'SSEBop')))
+    }else{
+      div(style = paste0('height:', ht, 'px'),
+          checkboxGroupInput(inputId  = 'data_select',
+                             label    = 'Select datasets to compare',
+                             choices  = fileInfo.sub$dataName))
+    }
+    #50px for 1 dataset
+    #100px for 3 datasets
+    #200px for 7 datasets
+    #480 for 10 datasets
+  })
+  #Time series UIinput
+  output$trangeUI <- renderUI({
+    if (is.null(input$data_select)){
+      div(style='height:80px;',
+          sliderInput(inputId = 'time_select',
+                      label = 'Custom time range for statistics:',
+                      min = 2000,
+                      max = 2010,
+                      value = c(2000,2010),
+                      step = 1,
+                      round = T)
+      )
+    }else{
+      fnames <<- fileInfo %>%
+        filter(dataName %in% input$data_select) %>%
+        filter(timeStep %in% input$tstep_select) %>%
+        filter(HUC %in% input$map_HUC_select) %>%
+        distinct(fnames)
+      fnames <<- unlist(fnames)
+      fdates <<- extractMetadata(fnames)
+      frange <<- lubridate::year(range(METsteps::timeOverlap(startDates = fdates$startDate,
+                                                             endDates = fdates$endDate,
+                                                             by = unique(fdates$timeStep))))
+      if (sum(is.na(frange)) != 0){
+        div(style = 'height:50px;color:red;',
+            checkboxGroupInput(inputId  = 'time_select',
+                               label    = 'Not all selected time series overlap',
+                               choices  = NULL))
+      }else{
+        div(style='height:80px;',
+            sliderInput(inputId = 'time_select',
+                        label = 'Custom time range for statistics:',
+                        min = frange[1],
+                        max = frange[2],
+                        value = frange,
+                        step = 1,
+                        round = T))
+      }
+    }
   })
   # List available statistics
   output$stats_available <- renderUI({
@@ -65,6 +119,13 @@ server <- function(input, output){
                    min = paste0(vrange[1], '-01-01'),
                    max = paste0(vrange[2], '-01-01'))
   })
+  # add highlight polygons with obs data check box input
+  # output$highlightCheck <- renderUI({
+  #   div(style = 'height:10px;',
+  #       checkboxInput(inputId = 'showPolysWithObs',
+  #                     label = 'Highlight polygons with observational data',
+  #                     value = FALSE))
+  # })
   # default plots
   output$plot1_input <- renderUI({
     div(style = 'height:50px;',
@@ -115,6 +176,12 @@ server <- function(input, output){
                         width = '70%',
                         choices = dnames.)
         )
+      }else if (x == "shinyPlot_HUC_Time_Series_and_Difference"){
+        #div(style = 'height:50px;',
+            checkboxInput(inputId = 'showObs',
+                        label = "Show observational data?",
+                        value = TRUE)
+        #)
       }
     }
   }
@@ -173,17 +240,17 @@ server <- function(input, output){
     #shinyPlot_HUC_Mean_Percentile_and_ECDF(default. = T)
   })
   # Note that no plots have been created yet
-  plotsCreated <- F
+  plotsCreated <<- F
   output$plotsCreated <- reactive({
     FALSE
   })
   outputOptions(output, "plotsCreated", suspendWhenHidden = FALSE)
   
   
-  
   ##### Reactive statistical processing and map plotting after clicking update button
   deComps.push <- observeEvent(input$go, {
     #-------- Reset default plots if previously generated ones exist
+    
     if (plotsCreated){
       output$mymap <- renderLeaflet({
         leaflet(
@@ -240,27 +307,44 @@ server <- function(input, output){
       TRUE
     })
     
+    # add highlight polygons with obs data checkbox input
+    output$highlightCheck <- renderUI({
+      div(style = 'height:10px;',
+          checkboxInput(inputId = 'showPolysWithObs',
+                        label = 'Highlight polygons with observational data',
+                        value = FALSE))
+    })
+    
+    # remove 'clickpoly' if it was created earlier
+    if (exists('clickpoly')) rm(clickpoly, envir = globalenv())
+    
     #-------- Define user-selected inputs as independent variables
     # Names of datasets
     dnames    <<- input$data_select
+    # Data Category
+    dataCategory <<- input$category_select
+    dataCat <<- dataCategory
     # Selected HUC region
     maphuc    <<- input$map_HUC_select
     # Selected timestep
     timeStep  <<- input$tstep_select
+    timeStep.ct <<- timeStep
     # Selected statistic
     stat      <<- input$stat_select
     # Selected color scheme
     colScheme <<- input$colors
+    # data year ranges
+    tLim      <<- input$time_select
     # Selected season/month
     if (input$seasMon_select == 'None'){
       subsetMonths <<- NA
       output$text2  <- renderText({
-        'All months included'
+        paste0('All months included (years ', tLim[1], ' to ', tLim[2], ')')
       })
     }else if (input$seasMon_select %in% c('Fall', 'Winter', 'Spring', 'Summer')){
       subsetMonths <<- get(input$seasMon_select)
       output$text2  <- renderText({
-        paste('Subsetted to:', paste0(base::month.name[subsetMonths], collapse = ', '))
+        paste('Subsetted to:', paste0(base::month.name[subsetMonths], collapse = ', '), '(years ', tLim[1], ' to ', tLim[2], ')')
       })
     }else{
       subsetMonths <<- which(base::month.abb == input$seasMon_select)
@@ -281,11 +365,16 @@ server <- function(input, output){
       #Record name of object to be created
       names.all       <- c(names.all, name.cur)   
       #Subset metadata to current file
-      info.cur        <- fileInfo[fileInfo$HUC == maphuc,]
-      info.cur        <- info.cur[info.cur$dataName == dnames[i],]
-      info.cur        <- info.cur[info.cur$timeStep == timeStep,]
+      # info.cur        <- fileInfo[fileInfo$HUC == maphuc,]
+      # info.cur        <- info.cur[info.cur$dataName == dnames[i],]
+      # info.cur        <- info.cur[info.cur$timeStep == timeStep,]
+      info.cur <<- fileInfo %>%
+        filter(HUC == maphuc) %>%
+        filter(dataName == dnames[i]) %>%
+        filter(timeStep == timeStep.ct) %>%
+        filter(dataCategory == dataCat)
       #File name
-      fname.cur       <- info.cur$fnames
+      fname.cur       <<- info.cur$fnames
       #Import file
       file.in         <- as.data.frame(feather::read_feather(path = file.path(path.feather, fname.cur)))
       #Define time-series for file (in as.Date format)
@@ -316,6 +405,15 @@ server <- function(input, output){
       #Lapply function to trim datasets to common indices
       Data           <<- lapply(X   = list.all,
                                 FUN = trimToIndices)
+      # trim data from years outside tLim
+      trimTotLim <- function(x, tLim){
+        return(
+          x[(lubridate::year(lubridate::date_decimal(zoo::index(x)))) %in% seq(tLim[1], tLim[2], 1), ]
+        )
+      }
+      Data <- lapply(X = Data,
+                     FUN = trimTotLim,
+                     tLim = tLim)
     }else{
       Data <<- list.all
     }
@@ -339,7 +437,7 @@ server <- function(input, output){
     subData     <<- Data[binary.locs]
     
     # If logPlotSubset = T, subset all data prior any stats work i.e. only subsetted data will be plotted in line plots
-    subsetbyMonthsFun <- function(x, mts){
+    subsetbyMonthsFun <<- function(x, mts){
       return(x[which(lubridate::month(lubridate::date_decimal(index(x))) %in% mts), ])
     }
     
@@ -488,6 +586,78 @@ server <- function(input, output){
     colorpal <- leaflet::colorNumeric(palette = colVec,
                                       domain  = c(-mag, mag))
     
+    # Manipulate point data information
+    if (!is.null(ptmeta)){
+      ptmeta2 <<- ptmeta %>%
+        filter(dataCategory == dataCat) %>%
+        filter(TimeStep == 'Monthly')
+      #filter out data outside of ranges in Shiny UI
+      if (nrow(ptmeta2) > 0){
+        dLim <- range(lubridate::year(lubridate::date_decimal(zoo::index(Data[[1]]))))
+        drFun <- function(obs, modRange){
+          if (length(modRange) != 2) stop('drFun() incorrect.')
+          obsSeq <- seq(from = lubridate::year(unlist(obs[7])),
+                        to = lubridate::year(unlist(obs[8])),
+                        by = 1)
+          if ((sum(obsSeq %in% seq(from = modRange[1],
+                                   to   = modRange[2],
+                                   by   = 1))) > 0){
+            return(TRUE)
+          }else{
+            return(FALSE)
+          }
+        }
+        obsKeep <- apply(X = ptmeta2,
+                         MARGIN = 1,
+                         FUN = drFun,
+                         modRange = dLim)
+        ptmeta2  <<- ptmeta2[obsKeep,]
+      }
+    }else{
+      ptmeta2 <<- NULL
+    }
+    
+    # loop through all polygons and count number of observations within
+    # POI <- polyHUC4
+    # ct <- data.frame(HUC = POI@data$HUC4, obsCount = NA)
+    # for (i in 1:nrow(POI)){
+    #   tt <- ptmeta[,c('OurID', 'Lat', 'Lon')]
+    #   sp::coordinates(tt) <- ~Lon+Lat
+    #   projection(tt) <- projection(POI)
+    #   tt <- tt[which(!is.na((sp::over(tt, POI[i,]))[,1])),]
+    #   ct$obsCount[i] <- nrow(tt)
+    # }
+    # 
+    # tt <- ptmeta[,c('OurID', 'Lat', 'Lon')]
+    # sp::coordinates(tt) <- ~Lon+Lat
+    # projection(tt) <- projection(POI)
+    # tt <- tt[which(!is.na((sp::over(tt, POI[i,]))[,1])),]
+    # ct$obsCount[i] <- nrow(tt)
+    # 
+    
+    
+    
+    popupFun <<- function(x){
+      paste0('Our ID: ', unlist(x[1]), '<br/>',
+             'Source: ', unlist(x[4]), '<br/>',
+             'Source ID: ', unlist(x[5]), '<br/>',
+             'Time Step: ', unlist(x[6]), '<br/>',
+             'First Obs: ', unlist(x[7]), '<br/>',
+             'Last Obs: ', unlist(x[8]), '<br/>',
+             'Measurement Type: ', unlist(x[8]), '<br/>',
+             'Misc Info: ', unlist(x[12]), '<br/>')
+    }
+    if (!is.null(ptmeta2)){
+      popupText <<- apply(X = ptmeta2,
+                          MARGIN = 1,
+                          FUN = popupFun)
+    }
+    markerMasterColors <- c('red', 'orange', 'green', 'blue', 'purple', 'white',
+                            'darkred', 'beige', 'darkgreen', 'darkblue', 'darkpurple', 'gray',
+                            'lightred', 'lightgreen', 'lightblue', 'pink', 'lightgray',
+                            'cadetblue', 'black')
+    markerColors <- markerMasterColors[as.integer(factor(ptmeta2$Source, unique(ptmeta2$Source)))]
+    #ptmeta <<- ptmeta[,c('OurID', 'Lat', 'Lon')]
     #-------- Add polygons to map and fill with colorpal function
     withProgress(message = 'Calculation in progress',
                  detail  = 'Please wait...',
@@ -523,8 +693,88 @@ server <- function(input, output){
                                title = stat,
                                opacity = 1)
                  })
+    if (input$showMarkers && (!is.null(ptmeta2))){
+      if (nrow(ptmeta2) > 0){
+        leafletProxy(mapId = 'mymap',
+                     data  = inShape) %>%
+          addAwesomeMarkers(lng = ptmeta2$Lon,
+                            lat = ptmeta2$Lat,
+                            popup = popupText,
+                            icon = makeAwesomeIcon(icon = 'flag', markerColor = markerColors)
+          )
+      }
+    }
   })
   
+  ##### Remove/Add point data according to input$showMarkers
+  observe({
+    if (!is.null(ptmeta2)){
+      if (nrow(ptmeta2) > 0){
+        if (input$showMarkers == FALSE){
+          leafletProxy(mapId = 'mymap',
+                       data  = inShape) %>%
+            clearMarkers()
+        }else if (input$showMarkers && plotsCreated){
+          leafletProxy(mapId = 'mymap',
+                       data  = inShape) %>%
+            addMarkers(lng   = ptmeta2$Lon,
+                       lat   = ptmeta2$Lat,
+                       popup = popupText)
+        } 
+      } 
+    }
+  })
+  
+  ##### Add/Remove polygon with obs data highlights according to input$showPolysWithObs
+  observe({
+    if (!is.null(ptmeta2)){
+      if (nrow(ptmeta2) > 0){
+        if (!is.null(input$showPolysWithObs)){
+          if (input$showPolysWithObs && plotsCreated){
+            tt2                     <- ptmeta2
+            sp::coordinates(tt2)    <- ~Lon+Lat
+            raster::projection(tt2) <- raster::projection(inShape)
+            inShape2                <- inShape
+            inShape2                <- inShape2[,grepl(pattern = 'HUC', x = colnames(inShape2@data))]
+            colnames(inShape2@data) <- 'HUC'
+            kp                      <- na.omit(unique((over(tt2, inShape2))[,1]))
+            inShape3                <<- inShape2[(inShape2@data$HUC %in% kp), ]
+            
+            # add highlights to map
+            hoIds <<- vector()
+            for (i in 1:nrow(inShape3)){
+              hoId  <- paste0('ho', floor(runif(1)*1000))
+              hoIds <<- c(hoIds, hoId)
+              leafletProxy(mapId = 'mymap',
+                           data  = inShape3) %>%
+                addPolygons(data         = inShape3[i,],
+                            weight       = 2,
+                            color        = 'lightblue',
+                            fill         = F,
+                            opacity      = 1,
+                            smoothFactor = 1,
+                            layerId      = hoId)
+            }
+            if (exists('clickpoly')){
+              leafletProxy(mapId = 'mymap') %>%
+                addPolygons(data    = clickpoly,
+                            weight  = 2,
+                            color   = '#00ff00',
+                            fill    = F,
+                            opacity = 1,
+                            layerId = 'clickhighlight')
+            }
+          }else{
+            if (exists('hoIds')){
+              leafletProxy(mapId = 'mymap') %>%
+                removeShape(layerId = hoIds)
+              hoIds <<- vector()
+            }
+          } 
+        } 
+      } 
+    }
+  })
   
   ##### Reactive Create New Map
   newMap <- observeEvent(input$goNewMap, {
@@ -536,12 +786,12 @@ server <- function(input, output){
   
   ##### Response to clicking "highlight individual HUC regions" button
   manHighIds <<- vector()
-  highlight.manual <- observeEvent(input$highlightHUC, {
-    HUCtoLight <- input$lightHUC
+  highlight.manual   <- observeEvent(input$highlightHUC, {
+    HUCtoLight       <- input$lightHUC
     manHighlightpoly <- inShape[inShape@data$HUC %in% HUCtoLight,]
 
     for (i in 1:nrow(manHighlightpoly)){
-      manId <- paste0('manHigh', floor(runif(1)*1000))
+      manId      <- paste0('manHigh', floor(runif(1)*1000))
       manHighIds <<- c(manHighIds, manId)
       leafletProxy(mapId = 'mymap',
                    data  = inShape) %>%
@@ -579,12 +829,14 @@ server <- function(input, output){
     #If click value is 'NULL' (when clicked between polygons) dont return any plots. Otherwise, continue.
     if (is.null(click) == FALSE){
       #Get data category
-      dataCategory <<- unique((fileInfo[fileInfo$dataName %in% dnames,])$dataCategory)
+      #dataCategory <<- unique((fileInfo[fileInfo$dataName %in% dnames,])$dataCategory)
+      # dataCategory <<- input$category_select
+      # dataCat <<- dataCategory
       #HUC Clicked Upon
       HCU <<- click$id
       if (is.na(suppressWarnings(as.numeric(HCU))) == FALSE){
         #Create update polygon (last polygon clicked on has highlighted border)
-        clickpoly <- inShape[inShape@data$HUC == HCU,]
+        clickpoly <<- inShape[inShape@data$HUC == HCU,]
         leafletProxy(mapId = 'mymap',
                      data  = inShape) %>%
           addPolygons(data    = clickpoly,
@@ -612,6 +864,9 @@ server <- function(input, output){
                                     FUN = subToHUCfun)
           
           if (logPlotSubset){
+            subsetbyMonthsFun <<- function(x, mts){
+              return(x[which(lubridate::month(lubridate::date_decimal(index(x))) %in% mts), ])
+            }
             if (length(subsetMonths) > 1){
               subToHUC <<- lapply(X   = subToHUC,
                                  FUN = subsetbyMonthsFun,
@@ -629,6 +884,20 @@ server <- function(input, output){
           subToHUC[is.infinite(subToHUC)] <<- NA
           index(subToHUC) <<- presIndex
           colnames(subToHUC) <<- dnames
+
+          #### Identify point data within polygon
+          if (!is.null(ptmeta2)){
+            if (nrow(ptmeta2) > 0){
+              ptSP <- ptmeta2[,c('OurID', 'Lat', 'Lon')]
+              sp::coordinates(ptSP) <- ~Lon+Lat
+              projection(ptSP) <- projection(clickpoly)
+              ptSP.trim <<- ptSP[which(!is.na((sp::over(ptSP, clickpoly))[,1])),] 
+            }else{
+              ptSP.trim <<- NULL
+            }
+          }else{
+            ptSP.trim <<- NULL
+          }
           
           #Generate ET plot
           #cbPalette <- c("#56B4E9", "#F0E442", "#CC79A7", "#0072B2", "#D55E00")
@@ -638,10 +907,10 @@ server <- function(input, output){
             # List of reactive inputs - saves values to list, which can then be fed into plotting functions
             feederList <- list(sample_subHUCs = input$sample_subHUCs,
                                alpha_slider = input$alpha_slider,
-                               slider_time = input$slider_time)
+                               slider_time = input$slider_time,
+                               showObs = input$showObs)
             # plotting function
             get(input$plot1_select)(feederList. = feederList)
-            #METsteps::shinyPlot_HUC_Time_Series_and_Difference(feederList. = feederList)
           })
           
           #Generate ET plot for specified HUC level for clicked HUC
@@ -649,12 +918,22 @@ server <- function(input, output){
           subHUC10 <<- vector(mode   = 'list',
                               length = length(dnames))
           for (i in 1:length(dnames)){
-            fnames.sub <- fileInfo[(fileInfo$dataName == dnames[i] & fileInfo$HUC == as.numeric(input$HUC_select) & fileInfo$timeStep == timeStep),]
+            #fnames.sub <- fileInfo[(fileInfo$dataName == dnames[i] & fileInfo$HUC == as.numeric(input$HUC_select) & fileInfo$timeStep == timeStep),]
+            fnames.sub <- fileInfo %>%
+              filter(dataName == dnames[i]) %>%
+              filter(HUC == as.numeric(input$HUC_select)) %>%
+              filter(timeStep == timeStep.ct) %>%
+              filter(dataCategory == dataCat)
             if (nrow(fnames.sub) == 0){
-              fnames.sub <- fileInfo[(fileInfo$dataName == dnames[i] & fileInfo$HUC == 8 & fileInfo$timeStep == timeStep),]
+              #fnames.sub <- fileInfo[(fileInfo$dataName == dnames[i] & fileInfo$HUC == 8 & fileInfo$timeStep == timeStep),]
+              fnames.sub <- fileInfo %>%
+                filter(dataName == dnames[i]) %>%
+                filter(HUC == 8) %>%
+                filter(timeStep == timeStep.ct) %>%
+                filter(dataCategory == dataCat)
               
             }
-            path.f             <- file.path(path.feather,
+            path.f             <<- file.path(path.feather,
                                             fnames.sub$fnames)
             
             #Import only relevant columns

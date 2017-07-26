@@ -40,6 +40,8 @@
 #' @param projManual Character, optional; Projection for datasets to be converted to.  Gridded data and shapefile projections will be
 #' transformed to projManual as necessary. For CONUS projects, suggested to leave at default. Defaults to NAD83 
 #' ('+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0').
+#' @param multiNum Numeric, optional; If you would like the results to be multiplied by a certain value, put it in here. Must be 
+#' numeric.  Defaults to NULL.
 #' @export
 #' @return Table of mean raster values for each gridded dataset layer.  Columns are gridded layers, rows are shapefile
 #' features.
@@ -66,7 +68,8 @@ aggregateRasterToPolygons <- function(dataPath,
                                 disag = TRUE,
                                 cancelReproject = FALSE,
                                 recursive = TRUE,
-                                projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'){
+                                projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0',
+                                multiNum = NULL){
   
   # dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/AET/SSEBopMonthly"
   # dataName = 'MOD16-A2'
@@ -121,7 +124,8 @@ aggregateRasterToPolygons <- function(dataPath,
     is.numeric(cushion),
     is.logical(verbose),
     is.logical(disag),
-    is.character(projManual)
+    is.character(projManual),
+    (is.null(multiNum) || is.numeric(multiNum))
   )
   if (MET.HUC10 == FALSE){
     stopifnot(
@@ -439,12 +443,22 @@ aggregateRasterToPolygons <- function(dataPath,
   RESULTS <- RESULTS * measurements::conv_unit(x    = 1,
                                                  from = unitDepth,
                                                  to   = 'mm')
+  # Multiplier
+  if (!is.null(multiNum)){
+    
+    RESULTS <- RESULTS * multiNum
+  }
+  
   
   # Create endDate object
   endDate <- date_decimal(as.numeric(colnames(RESULTS)[length(colnames(RESULTS))]))
   endDate <- substr(x = endDate,
                     start = 1,
                     stop = regexpr(' ', endDate) - 1)
+  if (nchar(endDate) == 0){
+    endDate <- date_decimal(as.numeric(colnames(RESULTS)[length(colnames(RESULTS))]))
+    endDate <- as.character(endDate)
+  }
   
   # Remove temporary files
   if (exists('projList1')) file.remove(projList1)

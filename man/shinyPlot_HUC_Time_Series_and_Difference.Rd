@@ -5,10 +5,10 @@
 \title{Primary Time Series and Difference Plot after HUC Click}
 \usage{
 shinyPlot_HUC_Time_Series_and_Difference(default. = FALSE,
-  feederList. = NULL, x = subToHUC, col = cbPalette,
-  ablCol = "darkgrey", colDif = "firebrick", HCU. = HCU,
-  dataCategory. = dataCategory, multiplot.cex = 1.8, multiplot.lab = 1.8,
-  cex.main = 1.8, ...)
+  feederList. = NULL, x = subToHUC, ptSP. = ptSP.trim,
+  path.obs. = path.obs, col = cbPalette, ablCol = "darkgrey",
+  colDif = "firebrick", HCU. = HCU, dataCategory. = dataCategory,
+  multiplot.cex = 1.4, multiplot.lab = 1.4, cex.main = 1.2, ...)
 }
 \arguments{
 \item{x}{Numeric; The values to be plotted.}
