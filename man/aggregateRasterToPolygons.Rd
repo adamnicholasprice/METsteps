@@ -8,7 +8,7 @@ aggregateRasterToPolygons(dataPath, dataName, dataExtension, dataCategory,
   startDate, timeStep, unitDepth = "mm", aggFUN = "mean",
   MET.HUC10 = TRUE, polyFname = NULL, polyLayer = NULL, polyIDs = NULL,
   maxLayers = 6, cushion = 3, verbose = TRUE, cl = NULL, disag = TRUE,
-  cancelReproject = FALSE, recursive = TRUE,
+  disagFactor = NULL, cancelReproject = FALSE, recursive = TRUE,
   projManual = "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0",
   multiNum = NULL)
 }
@@ -58,6 +58,8 @@ to TRUE.}
 
 \item{disag}{Logical; Allow resampling if necessary.  Defaults to TRUE.  Resampling occurs when (average cell size of dataset) x
 4 > average size of polygons in shapefile.}
+
+\item{disagFactor}{Integer; Disaggregation factor (> 1 disaggregates).  If NULL, automatically selects factor.  Defaults to NULL.}
 
 \item{cancelReproject}{Logical; If FALSE, reprojection is forced if necessary.  Set to TRUE to disable raster reprojection.
 Defaults to FALSE. Suggested for use when WGS84 is projection and extents align with included datasets (polyHUC2 for example).}

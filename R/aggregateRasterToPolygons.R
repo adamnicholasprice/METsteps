@@ -34,6 +34,7 @@
 #' @param cl Cluster object, optional; If supplied, extraction run in parallels.  Suggested max number of cores is 10.
 #' @param disag Logical; Allow resampling if necessary.  Defaults to TRUE.  Resampling occurs when (average cell size of dataset) x
 #' 4 > average size of polygons in shapefile.
+#' @param disagFactor Integer; Disaggregation factor (> 1 disaggregates).  If NULL, automatically selects factor.  Defaults to NULL.
 #' @param cancelReproject Logical; If FALSE, reprojection is forced if necessary.  Set to TRUE to disable raster reprojection.
 #' Defaults to FALSE. Suggested for use when WGS84 is projection and extents align with included datasets (polyHUC2 for example).
 #' @param recursive Logical; Should the listing recurse into directories? Defaults to TRUE.
@@ -66,6 +67,7 @@ aggregateRasterToPolygons <- function(dataPath,
                                 verbose = TRUE,
                                 cl = NULL,
                                 disag = TRUE,
+                                disagFactor = NULL,
                                 cancelReproject = FALSE,
                                 recursive = TRUE,
                                 projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0',
@@ -163,7 +165,7 @@ aggregateRasterToPolygons <- function(dataPath,
         stop('polyIDs not found as column name in shapefile')
       }
     } else if (length(polyIDs) > 1){
-      if (length(polyIDs != nrow(polys@data))){
+      if (length(polyIDs) != nrow(polys@data)){
         stop('length(polyIDs) != number of shapefile features')
       }
     }
@@ -334,6 +336,7 @@ aggregateRasterToPolygons <- function(dataPath,
     }else{
       resFact <- 1
     }
+    if (!is.null(disagFactor)) resFact <- disagFactor
   }else{
     resFact <- 1
   }
@@ -408,7 +411,8 @@ aggregateRasterToPolygons <- function(dataPath,
   }
   
   if (verbose && resFact == 1) writeLines('Extracting at polygons')
-  if (verbose && resFact != 1) writeLines('Extracting at polygons and disaggregating to ~4 cells/polygon')
+  if (verbose && resFact != 1) writeLines(paste('Extracting at polygons and disaggregating to ~4 cells/polygon (disaggregation factor =',
+                                                resFact, ')'))
   # vxList <- pblapply(X           = splitRas,
   #                    FUN         = applyVxExtract,
   #                    sp          = polys,
@@ -423,6 +427,20 @@ aggregateRasterToPolygons <- function(dataPath,
                               disagFactor = resFact,
                               cl          = cl)
   gc()
+  
+  # delete this junk
+  # plot(shp3[is.na(RESULTS[,1]),])
+  # gageRem <- (shp3[is.na(RESULTS[,1]),])@data$GAGE_ID
+  # write.csv(gageRem, 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/ByWatershed/Shapefiles/RemoveFromCONUS_WGS84.csv')
+  # 
+  # gagesToEliminate = (shp2@data$GAGE_ID)[!is.na(RESULTS[,1])]
+  # shp3 = shp2[(as.numeric(shp2@data$GAGE_ID) %in% as.numeric(gagesToEliminate)), ]
+  # writeOGR(shp3,
+  #          dsn = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/ByWatershed/Shapefiles/bas_ref_CONUS_WGS84.shp',
+  #          layer = 'bas_ref_CONUS_WGS84',
+  #          driver = 'ESRI Shapefile')
+  # 
+  
   
   # Format results
   RESULTS <- do.call(cbind, vxList)
