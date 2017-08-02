@@ -196,10 +196,10 @@ server <- function(input, output){
       if (x == "shinyPlot_HUC_subHUC_Plot"){
         div(#style = 'height:50px;',
           radioButtons(inputId = 'sample_subHUCs',
-                       label = 'Sample sub-HUCs to decrease render time?',
-                       choices = list(Yes = TRUE, No = FALSE),
+                        label = 'Sample sub-HUCs to decrease render time?',
+                        choices = list(Yes = TRUE, No = FALSE),
                        selected = TRUE,
-                       width = '100%',
+                        width = '100%',
                        inline = TRUE)
         )
       }else if (x == "shinyPlot_HUC_Taylor_Diagram"){
@@ -212,9 +212,9 @@ server <- function(input, output){
         )
       }else if (x == "shinyPlot_HUC_Time_Series_and_Difference"){
         #div(style = 'height:50px;',
-        checkboxInput(inputId = 'showObs',
-                      label = "Show observational data?",
-                      value = TRUE)
+            checkboxInput(inputId = 'showObs',
+                        label = "Show observational data?",
+                        value = TRUE)
         #)
       }
     }
@@ -265,7 +265,7 @@ server <- function(input, output){
         get(input$plot2_select)(default = T)
       }
       #METsteps::shinyPlot_HUC_subHUC_Plot(default. = T)
-    }
+      }
   })
   output$plot3 <- renderPlot({
     if (is.null(input$plot3_select)){
@@ -389,11 +389,11 @@ server <- function(input, output){
       subsetMonths <<- get(input$seasMon_select)
       output$text2  <- renderText({
         paste0('Datasets: ',
-               METsteps::pasteSentence(x = dnames, period = T),
-               '  Subsetted to: ',
-               METsteps::pasteSentence(base::month.name[subsetMonths]),
-               ' (years ', tLim[1], ' to ', tLim[2], ').'
-        )
+              METsteps::pasteSentence(x = dnames, period = T),
+              '  Subsetted to: ',
+              METsteps::pasteSentence(base::month.name[subsetMonths]),
+              ' (years ', tLim[1], ' to ', tLim[2], ').'
+              )
       })
     }else{
       subsetMonths <<- which(base::month.abb == input$seasMon_select)
@@ -403,7 +403,7 @@ server <- function(input, output){
                '  Subsetted to: ',
                METsteps::pasteSentence(base::month.name[subsetMonths]),
                ' (years ', tLim[1], ' to ', tLim[2], ').'
-        )
+               )
       })
     }
     # Plot subsetted data?
@@ -470,8 +470,8 @@ server <- function(input, output){
         )
       }
       Data <<- lapply(X = Data,
-                      FUN = trimTotLim,
-                      tLim = tLim)
+                     FUN = trimTotLim,
+                     tLim = tLim)
     }else{
       Data <<- list.all
     }
@@ -502,12 +502,12 @@ server <- function(input, output){
     
     if (length(subsetMonths) > 1){
       subData <<- lapply(X   = subData,
-                         FUN = subsetbyMonthsFun,
-                         mts = subsetMonths)
+                        FUN = subsetbyMonthsFun,
+                        mts = subsetMonths)
     }else if (!is.na(subsetMonths)){
       subData <<- lapply(X   = subData,
-                         FUN = subsetbyMonthsFun,
-                         mts = subsetMonths)
+                        FUN = subsetbyMonthsFun,
+                        mts = subsetMonths)
     }
     
     #Set bounds on x-axis time period control
@@ -515,7 +515,7 @@ server <- function(input, output){
       times.all <- as.Date(zoo::index(subData[[1]]))
       vrange <- c(lubridate::year(times.all[1]),
                   lubridate::year(as.Date(tail(times.all, n = 1)))
-      )
+                  )
       # if (length(times.dec) > 10){vrange <- c((max(times.dec)-10), max(times.dec))}
       if (length(seq(vrange[1],vrange[2])) > 10) vrange <- c((vrange[2] - 10), vrange[2])
       # subset to years
@@ -592,7 +592,7 @@ server <- function(input, output){
         statOUT <- as.numeric(unlist(lapply(X = cb, FUN = get(stat))))
       }else{
         statOUT <- as.numeric(unlist(parLapply(cl = cl, X = cb, fun = get(stat))))
-      }
+        }
       #Close cluster
       if (exists('cl')){
         if (is.null(cl) == F) parallel::stopCluster(cl)
@@ -649,38 +649,62 @@ server <- function(input, output){
                                       domain  = c(-mag, mag))
     
     # Manipulate point data information
-    # if (!is.null(ptmeta)){
-    #   ptmeta2 <<- ptmeta %>%
-    #     filter(dataCategory == dataCat) %>%
-    #     filter(TimeStep == 'year')
-    #   #filter out data outside of ranges in Shiny UI
-    #   if (nrow(ptmeta2) > 0){
-    #     #dLim <- range(lubridate::year(lubridate::date_decimal(zoo::index(Data[[1]]))))
-    #     dLim <- range(lubridate::year(zoo::index(Data[[1]])))
-    #     drFun <- function(obs, modRange){
-    #       if (length(modRange) != 2) stop('drFun() incorrect.')
-    #       obsSeq <- seq(from = lubridate::year(unlist(obs[7])),
-    #                     to = lubridate::year(unlist(obs[8])),
-    #                     by = 1)
-    #       if ((sum(obsSeq %in% seq(from = modRange[1],
-    #                                to   = modRange[2],
-    #                                by   = 1))) > 0){
-    #         return(TRUE)
-    #       }else{
-    #         return(FALSE)
-    #       }
-    #     }
-    #     obsKeep <- apply(X = ptmeta2,
-    #                      MARGIN = 1,
-    #                      FUN = drFun,
-    #                      modRange = dLim)
-    #     ptmeta2  <<- ptmeta2[obsKeep,]
-    #   }
-    # }else{
-    #   ptmeta2 <<- NULL
-    # }
+    if (!is.null(ptmeta)){
+      ptmeta2 <<- ptmeta %>%
+        filter(dataCategory == dataCat) %>%
+        filter(TimeStep == 'year')
+      print('22')
+      #filter out data outside of ranges in Shiny UI
+      if (nrow(ptmeta2) > 0){
+        #dLim <- range(lubridate::year(lubridate::date_decimal(zoo::index(Data[[1]]))))
+        dLim <- range(lubridate::year(zoo::index(Data[[1]])))
+        drFun <- function(obs, modRange){
+          if (length(modRange) != 2) stop('drFun() incorrect.')
+          obsSeq <- seq(from = lubridate::year(unlist(obs[7])),
+                        to = lubridate::year(unlist(obs[8])),
+                        by = 1)
+          if ((sum(obsSeq %in% seq(from = modRange[1],
+                                   to   = modRange[2],
+                                   by   = 1))) > 0){
+            return(TRUE)
+          }else{
+            return(FALSE)
+          }
+        }
+        obsKeep <- apply(X = ptmeta2,
+                         MARGIN = 1,
+                         FUN = drFun,
+                         modRange = dLim)
+        ptmeta2  <<- ptmeta2[obsKeep,]
+      }
+      print('11')
+    }else{
+      ptmeta2 <<- NULL
+    }
     
-    
+    # Manipulate point data information (2)
+    if (!is.null(ptmeta)){
+      # filter by category
+      ptmeta3 <<- ptmeta %>%
+        filter(dataCategory == dataCat)
+      # generate UI
+      output$allObsData <- renderUI({
+        checkboxGroupInput(inputId = 'obsNames_select',
+                           label = 'Select Observational Data',
+                           choices = unique(ptmeta3$Source))
+      })
+      print(input$obsNames_select)
+      # ptmeta3 <<- ptmeta3 %>%
+      #   filter(Source %in% input$obsNames_select)
+      # # Aggregate check
+      # output$questionAggregate <- renderUI({
+      #   checkboxInput(inputId = 'aggregateObs',
+      #                 label = "Aggregate higher res data when available?",
+      #                 value = TRUE)
+      # })
+      
+      
+    }
     
     # loop through all polygons and count number of observations within
     # POI <- polyHUC4
@@ -702,26 +726,26 @@ server <- function(input, output){
     
     
     
-    # popupFun <<- function(x){
-    #   paste0('Our ID: ', unlist(x[1]), '<br/>',
-    #          'Source: ', unlist(x[4]), '<br/>',
-    #          'Source ID: ', unlist(x[5]), '<br/>',
-    #          'Time Step: ', unlist(x[6]), '<br/>',
-    #          'First Obs: ', unlist(x[7]), '<br/>',
-    #          'Last Obs: ', unlist(x[8]), '<br/>',
-    #          'Measurement Type: ', unlist(x[8]), '<br/>',
-    #          'Misc Info: ', unlist(x[12]), '<br/>')
-    # }
-    # if (!is.null(ptmeta2)){
-    #   popupText <<- apply(X = ptmeta2,
-    #                       MARGIN = 1,
-    #                       FUN = popupFun)
-    # }
-    # markerMasterColors <- c('red', 'orange', 'green', 'blue', 'purple', 'white',
-    #                         'darkred', 'beige', 'darkgreen', 'darkblue', 'darkpurple', 'gray',
-    #                         'lightred', 'lightgreen', 'lightblue', 'pink', 'lightgray',
-    #                         'cadetblue', 'black')
-    # markerColors <- markerMasterColors[as.integer(factor(ptmeta2$Source, unique(ptmeta2$Source)))]
+    popupFun <<- function(x){
+      paste0('Our ID: ', unlist(x[1]), '<br/>',
+             'Source: ', unlist(x[4]), '<br/>',
+             'Source ID: ', unlist(x[5]), '<br/>',
+             'Time Step: ', unlist(x[6]), '<br/>',
+             'First Obs: ', unlist(x[7]), '<br/>',
+             'Last Obs: ', unlist(x[8]), '<br/>',
+             'Measurement Type: ', unlist(x[8]), '<br/>',
+             'Misc Info: ', unlist(x[12]), '<br/>')
+    }
+    if (!is.null(ptmeta2)){
+      popupText <<- apply(X = ptmeta2,
+                          MARGIN = 1,
+                          FUN = popupFun)
+    }
+    markerMasterColors <- c('red', 'orange', 'green', 'blue', 'purple', 'white',
+                            'darkred', 'beige', 'darkgreen', 'darkblue', 'darkpurple', 'gray',
+                            'lightred', 'lightgreen', 'lightblue', 'pink', 'lightgray',
+                            'cadetblue', 'black')
+    markerColors <- markerMasterColors[as.integer(factor(ptmeta2$Source, unique(ptmeta2$Source)))]
     #ptmeta <<- ptmeta[,c('OurID', 'Lat', 'Lon')]
     #-------- Add polygons to map and fill with colorpal function
     withProgress(message = 'Calculation in progress',
@@ -758,266 +782,45 @@ server <- function(input, output){
                                title = stat,
                                opacity = 1)
                  })
-    # if (input$showMarkers && (!is.null(ptmeta2))){
-    #   if (nrow(ptmeta2) > 0){
-    #     leafletProxy(mapId = 'mymap',
-    #                  data  = inShape) %>%
-    #       addAwesomeMarkers(lng = ptmeta2$Lon,
-    #                         lat = ptmeta2$Lat,
-    #                         popup = popupText,
-    #                         icon = makeAwesomeIcon(icon = 'flag', markerColor = markerColors)
-    #       )
-    #   }
-    # }
-    
-
-    # Reduce obs pt data as necessary
-    if (!is.null(ptmeta)){
-      if (nrow(ptmeta) > 0){
-        #dLim <- range(lubridate::year(lubridate::date_decimal(zoo::index(Data[[1]]))))
-        dLim <- range(lubridate::year(zoo::index(Data[[1]])))
-        drFun <- function(obs, modRange){
-          if (length(modRange) != 2) stop('drFun() incorrect.')
-          obsSeq <- seq(from = lubridate::year(unlist(obs[7])),
-                        to = lubridate::year(unlist(obs[8])),
-                        by = 1)
-          if ((sum(obsSeq %in% seq(from = modRange[1],
-                                   to   = modRange[2],
-                                   by   = 1))) > 0){
-            return(TRUE)
-          }else{
-            return(FALSE)
-          }
-        }
-        obsKeep <- apply(X = ptmeta,
-                         MARGIN = 1,
-                         FUN = drFun,
-                         modRange = dLim)
-        ptmeta.dateTrim  <<- ptmeta[obsKeep,]
-      }
-      if (input$aggregateObs == 1){
-        # filter by data category and time
-        if (timeStep == 'day'){
-          ptmeta.map <<- ptmeta.dateTrim %>%
-            filter(dataCategory == dataCat) %>%
-            filter(TimeStep %in% 'day')
-          
-          output$allObsData <<- renderUI({
-            checkboxGroupInput(inputId = 'obsNames_select',
-                               label = 'Select Observational Data',
-                               choices = unique(ptmeta.map$Source),
-                               selected = unique(ptmeta.map$Source))
-          })
-        }else if (timeStep == 'month'){
-          ptmeta.map <<- ptmeta.dateTrim %>%
-            filter(dataCategory == dataCat) %>%
-            filter(TimeStep %in% c('day', 'month'))
-          
-          output$allObsData <- renderUI({
-            checkboxGroupInput(inputId = 'obsNames_select',
-                               label = 'Select Observational Data',
-                               choices = unique(ptmeta.map$Source),
-                               selected = unique(ptmeta.map$Source))
-          })
-        }else if (timeStep == 'year'){
-          ptmeta.map <<- ptmeta.dateTrim %>%
-            filter(dataCategory == dataCat) %>%
-            filter(TimeStep %in% c('day', 'month', 'year'))
-          output$allObsData <- renderUI({
-            checkboxGroupInput(inputId = 'obsNames_select',
-                               label = 'Select Observational Data',
-                               choices = unique(ptmeta.map$Source),
-                               selected = unique(ptmeta.map$Source))
-          })
-        }
-      }else{
-        output$allObsData <- renderUI({
-          ptmeta.map <<- ptmeta.dateTrim %>%
-            filter(dataCategory == dataCat) %>%
-            filter(TimeStep == timeStep)
-          checkboxGroupInput(inputId = 'obsNames_select',
-                             label = 'Select Observational Data',
-                             choices = unique(ptmeta.map$Source),
-                             selected = unique(ptmeta.map$Source))
-        })
-      }
-    }
-  })
-  
-
-  # Update obs selection based on whether user wants to aggregate higher-res data
-  # observeEvent(input$aggregateObs, {
-  #   if (plotsCreated){
-  #     if (input$aggregateObs & !is.null(ptmeta)){
-  #       # filter by data category and time
-  #       if (timeStep == 'day'){
-  #         ptmeta.map <<- ptmeta.dateTrim %>%
-  #           filter(dataCategory == dataCat) %>%
-  #           filter(TimeStep %in% 'day')
-  #         
-  #         output$allObsData <<- renderUI({
-  #           checkboxGroupInput(inputId = 'obsNames_select',
-  #                              label = 'Select Observational Data',
-  #                              choices = unique(ptmeta.map$Source),
-  #                              selected = unique(ptmeta.map$Source))
-  #         })
-  #       }else if (timeStep == 'month'){
-  #         ptmeta.map <<- ptmeta.dateTrim %>%
-  #           filter(dataCategory == dataCat) %>%
-  #           filter(TimeStep %in% c('day', 'month'))
-  #         
-  #         output$allObsData <- renderUI({
-  #           checkboxGroupInput(inputId = 'obsNames_select',
-  #                              label = 'Select Observational Data',
-  #                              choices = unique(ptmeta.map$Source),
-  #                              selected = unique(ptmeta.map$Source))
-  #         })
-  #       }else if (timeStep == 'year'){
-  #         ptmeta.map <<- ptmeta.dateTrim %>%
-  #           filter(dataCategory == dataCat) %>%
-  #           filter(TimeStep %in% c('day', 'month', 'year'))
-  #         output$allObsData <- renderUI({
-  #           checkboxGroupInput(inputId = 'obsNames_select',
-  #                              label = 'Select Observational Data',
-  #                              choices = unique(ptmeta.map$Source),
-  #                              selected = unique(ptmeta.map$Source))
-  #         })
-  #       }
-  #     }else{
-  #       output$allObsData <- renderUI({
-  #         ptmeta.map <<- ptmeta.dateTrim %>%
-  #           filter(dataCategory == dataCat) %>%
-  #           filter(TimeStep == timeStep)
-  #         checkboxGroupInput(inputId = 'obsNames_select',
-  #                            label = 'Select Observational Data',
-  #                            choices = unique(ptmeta.map$Source),
-  #                            selected = unique(ptmeta.map$Source))
-  #       })
-  #     }
-  #   }
-  # })
-  
-  
-
-
-  # # Generate observation UI based on input$aggregateObs
-  # observe({
-  #   # if (!is.null(ptmeta) & !is.null(timeStep) & exists('dataCat')){
-  #   if (plotsCreated){
-  #     print('b')
-  #     if (input$aggregateObs){
-  #       # filter by data category and time
-  #       if (timeStep == 'day'){
-  #         ptmeta.map <<- ptmeta %>%
-  #           filter(dataCategory == dataCat) %>%
-  #           filter(TimeStep %in% 'day')
-  # 
-  #         output$allObsData <<- renderUI({
-  #           checkboxGroupInput(inputId = 'obsNames_select',
-  #                              label = 'Select Observational Data',
-  #                              choices = unique(ptmeta.map$Source),
-  #                              selected = unique(ptmeta.map$Source))
-  #         })
-  #       }else if (timeStep == 'month'){
-  #         ptmeta.map <<- ptmeta %>%
-  #           filter(dataCategory == dataCat) %>%
-  #           filter(TimeStep %in% c('day', 'month'))
-  # 
-  #         output$allObsData <- renderUI({
-  #           checkboxGroupInput(inputId = 'obsNames_select',
-  #                              label = 'Select Observational Data',
-  #                              choices = unique(ptmeta.map$Source),
-  #                              selected = unique(ptmeta.map$Source))
-  #         })
-  #       }else if (timeStep == 'year'){
-  #         ptmeta.map <<- ptmeta %>%
-  #           filter(dataCategory == dataCat) %>%
-  #           filter(TimeStep %in% c('day', 'month', 'year'))
-  #         output$allObsData <- renderUI({
-  #           checkboxGroupInput(inputId = 'obsNames_select',
-  #                              label = 'Select Observational Data',
-  #                              choices = unique(ptmeta.map$Source),
-  #                              selected = unique(ptmeta.map$Source))
-  #         })
-  #       }
-  #     }else{
-  #       output$allObsData <- renderUI({
-  #         ptmeta.map <<- ptmeta %>%
-  #           filter(dataCategory == dataCat) %>%
-  #           filter(TimeStep == timeStep)
-  #         checkboxGroupInput(inputId = 'obsNames_select',
-  #                            label = 'Select Observational Data',
-  #                            choices = unique(ptmeta.map$Source),
-  #                            selected = unique(ptmeta.map$Source))
-  #       })
-  #     }
-  #   }else{
-  #     ptmeta.map <<- NULL
-  #   }
-  # })
-  
-  
-  
-  # Map point data on button click
-  observeEvent(input$mapObs, {
-    if (!is.null(ptmeta.map)){
-      if (nrow(ptmeta.map) > 0){
-        # subset to selected observational data
-        ptmeta.source <<- ptmeta.map %>%
-          filter(Source %in% input$obsNames_select)
-        # clear any duplicate points so no overplot
-        ptmeta.pts <<- unique(ptmeta.source[,c('Lat', 'Lon', 'Source')])
-
-        # Create popup function when obs pt clicked on
-        #' popupFun <<- function(x){
-        #'   paste0('Our ID: ', unlist(x[1]), '<br/>',
-        #'          'Source: ', unlist(x[4]), '<br/>',
-        #'          'Source ID: ', unlist(x[5]), '<br/>',
-        #'          #'Time Step: ', unlist(x[6]), '<br/>',
-        #'          #'First Obs: ', unlist(x[7]), '<br/>',
-        #'          #'Last Obs: ', unlist(x[8]), '<br/>',
-        #'          'Measurement Type: ', unlist(x[9]), '<br/>',
-        #'          'Misc Info: ', unlist(x[12]), '<br/>')}
-        # popupText <<- apply(X = ptmeta.map,
-        #                     MARGIN = 1,
-        #                     FUN = popupFun)
-        markerMasterColors <- c('red', 'orange', 'green', 'blue', 'purple', 'white',
-                                'darkred', 'beige', 'darkgreen', 'darkblue', 'darkpurple', 'gray',
-                                'lightred', 'lightgreen', 'lightblue', 'pink', 'lightgray',
-                                'cadetblue', 'black')
-        markerColors <- markerMasterColors[as.integer(factor(ptmeta.pts$Source, unique(ptmeta$Source)))]
-        #
-        # Remove any previous markers
+    if (input$showMarkers && (!is.null(ptmeta2))){
+      if (nrow(ptmeta2) > 0){
         leafletProxy(mapId = 'mymap',
                      data  = inShape) %>%
-          clearMarkers()
-        #Add new markers
-        leafletProxy(mapId = 'mymap',
-                     data  = inShape) %>%
-          addAwesomeMarkers(lng = ptmeta.pts$Lon,
-                            lat = ptmeta.pts$Lat,
-                            #popup = popupText,
+          addAwesomeMarkers(lng = ptmeta2$Lon,
+                            lat = ptmeta2$Lat,
+                            popup = popupText,
                             icon = makeAwesomeIcon(icon = 'flag', markerColor = markerColors)
-                            )
+          )
       }
     }
   })
-
-  # Clear point data
-  observeEvent(input$rmmapObs, {
-    leafletProxy(mapId = 'mymap',
-                 data  = inShape) %>%
-      clearMarkers()
+  
+  ##### Remove/Add point data according to input$showMarkers
+  observe({
+    if (!is.null(ptmeta2)){
+      if (nrow(ptmeta2) > 0){
+        if (input$showMarkers == FALSE){
+          leafletProxy(mapId = 'mymap',
+                       data  = inShape) %>%
+            clearMarkers()
+        }else if (input$showMarkers && plotsCreated){
+          leafletProxy(mapId = 'mymap',
+                       data  = inShape) %>%
+            addMarkers(lng   = ptmeta2$Lon,
+                       lat   = ptmeta2$Lat,
+                       popup = popupText)
+        } 
+      } 
+    }
   })
-
+  
   ##### Add/Remove polygon with obs data highlights according to input$showPolysWithObs
   observe({
-    if (!is.null(ptmeta.map)){
-      if (nrow(ptmeta.map) > 0){
-        ptmeta.poly <- unique(ptmeta.map[,c('Lat', 'Lon')])
+    if (!is.null(ptmeta2)){
+      if (nrow(ptmeta2) > 0){
         if (!is.null(input$showPolysWithObs)){
           if (input$showPolysWithObs && plotsCreated){
-            tt2                     <- ptmeta.poly
+            tt2                     <- ptmeta2
             sp::coordinates(tt2)    <- ~Lon+Lat
             raster::projection(tt2) <- raster::projection(inShape)
             inShape2                <- inShape
@@ -1025,7 +828,7 @@ server <- function(input, output){
             colnames(inShape2@data) <- 'HUC'
             kp                      <- na.omit(unique((over(tt2, inShape2))[,1]))
             inShape3                <<- inShape2[(inShape2@data$HUC %in% kp), ]
-
+            
             # add highlights to map
             hoIds <<- vector()
             for (i in 1:nrow(inShape3)){
@@ -1056,12 +859,12 @@ server <- function(input, output){
                 removeShape(layerId = hoIds)
               hoIds <<- vector()
             }
-          }
-        }
-      }
+          } 
+        } 
+      } 
     }
   })
-
+  
   ##### Reactive Create New Map
   newMap <- observeEvent(input$goNewMap, {
     output$plotsCreated <- reactive({
@@ -1069,7 +872,8 @@ server <- function(input, output){
     })
   })
   
-  #### Response to clicking "highlight individual HUC regions" button
+  
+  ##### Response to clicking "highlight individual HUC regions" button
   manHighIds <<- vector()
   highlight.manual   <- observeEvent(input$highlightHUC, {
     HUCtoLight       <- input$lightHUC
@@ -1089,6 +893,7 @@ server <- function(input, output){
     }
   })
   
+  
   ##### Response to clicking "clear highlight" button
   remove.highlight <- observeEvent(input$removeManHighlights, {
     if (length(manHighIds) > 0){
@@ -1098,7 +903,7 @@ server <- function(input, output){
       manHighIds <<- vector()
     }else{}
   })
-
+  
   
   ##### Response to clicking (selecting) a polygon interactively  <- this is where most plotting functions will go
   observe({
@@ -1111,13 +916,12 @@ server <- function(input, output){
     }
     
     #If click value is 'NULL' (when clicked between polygons) dont return any plots. Otherwise, continue.
-    if (!is.null(click)){
+    if (is.null(click) == FALSE){
       #Get data category
-      # dataCategory <<- unique((fileInfo[fileInfo$dataName %in% dnames,])$dataCategory)
+      #dataCategory <<- unique((fileInfo[fileInfo$dataName %in% dnames,])$dataCategory)
       # dataCategory <<- input$category_select
       # dataCat <<- dataCategory
       #HUC Clicked Upon
-      
       HCU <<- click$id
       if (is.na(suppressWarnings(as.numeric(HCU))) == FALSE){
         #Create update polygon (last polygon clicked on has highlighted border)
@@ -1130,7 +934,7 @@ server <- function(input, output){
                       fill    = F,
                       opacity = 1,
                       layerId = 'clickhighlight')
-
+        
         #Subset data to required HUC
         subToHUCfun <- function(foo){
           #find column for huc clicked on
@@ -1143,11 +947,11 @@ server <- function(input, output){
             return(isod)
           }
         }
-
+        
         if (as.numeric(HCU) %in% as.numeric(colnames(subData[[1]]))){
           subToHUC        <<- lapply(X   = subData,
-                                     FUN = subToHUCfun)
-
+                                    FUN = subToHUCfun)
+          
           if (logPlotSubset){
             subsetbyMonthsFun <<- function(x, mts){
               #return(x[which(lubridate::month(lubridate::date_decimal(index(x))) %in% mts), ])
@@ -1155,48 +959,36 @@ server <- function(input, output){
             }
             if (length(subsetMonths) > 1){
               subToHUC <<- lapply(X   = subToHUC,
-                                  FUN = subsetbyMonthsFun,
-                                  mts = subsetMonths)
+                                 FUN = subsetbyMonthsFun,
+                                 mts = subsetMonths)
             }else if (!is.na(subsetMonths)){
               subToHUC <<- lapply(X   = subToHUC,
-                                  FUN = subsetbyMonthsFun,
-                                  mts = subsetMonths)
+                                 FUN = subsetbyMonthsFun,
+                                 mts = subsetMonths)
             }
           }
-
+          
           presIndex       <- index(subToHUC[[1]])   #Record index to reapply after unlisting
           subToHUC        <<- zoo::as.zoo(matrix(data = unlist(subToHUC),
-                                                 nrow = length(subToHUC[[1]])))
+                                                nrow = length(subToHUC[[1]])))
           subToHUC[is.infinite(subToHUC)] <<- NA
           index(subToHUC) <<- presIndex
           colnames(subToHUC) <<- dnames
 
           #### Identify point data within polygon
-          if (exists('ptmeta.source')){
-            if (nrow(ptmeta.source) > 0){
-              ptSP <- ptmeta.source[,c('OurID', 'Lat', 'Lon')]
+          if (!is.null(ptmeta2)){
+            if (nrow(ptmeta2) > 0){
+              ptSP <- ptmeta2[,c('OurID', 'Lat', 'Lon')]
               sp::coordinates(ptSP) <- ~Lon+Lat
               projection(ptSP) <- projection(clickpoly)
-              ptSP.trim <<- ptSP[which(!is.na((sp::over(ptSP, clickpoly))[,1])),]
+              ptSP.trim <<- ptSP[which(!is.na((sp::over(ptSP, clickpoly))[,1])),] 
             }else{
               ptSP.trim <<- NULL
             }
           }else{
             ptSP.trim <<- NULL
           }
-              # if (!is.null(ptmeta2)){
-              #   if (nrow(ptmeta2) > 0){
-              #     ptSP <- ptmeta2[,c('OurID', 'Lat', 'Lon')]
-              #     sp::coordinates(ptSP) <- ~Lon+Lat
-              #     projection(ptSP) <- projection(clickpoly)
-              #     ptSP.trim <<- ptSP[which(!is.na((sp::over(ptSP, clickpoly))[,1])),]
-              #   }else{
-              #     ptSP.trim <<- NULL
-              #   }
-              # }else{
-              #   ptSP.trim <<- NULL
-              # }
-
+          
           #Generate ET plot
           #cbPalette <- c("#56B4E9", "#F0E442", "#CC79A7", "#0072B2", "#D55E00")
           cbPalette <<- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#000000")
@@ -1207,11 +999,11 @@ server <- function(input, output){
                                alpha_slider = input$alpha_slider,
                                slider_time = input$slider_time,
                                showObs = input$showObs)
-            
+            print(input$slider_time)
             # plotting function
             get(input$plot1_select)(feederList. = feederList)
           })
-
+          
           #Generate ET plot for specified HUC level for clicked HUC
           ####!!!!!! Import subHUC levels
           subHUC10 <<- vector(mode   = 'list',
@@ -1230,11 +1022,11 @@ server <- function(input, output){
                 filter(HUC == 8) %>%
                 filter(timeStep == timeStep.ct) %>%
                 filter(dataCategory == dataCat)
-
+              
             }
             path.f             <<- file.path(path.feather,
-                                             fnames.sub$fnames)
-
+                                            fnames.sub$fnames)
+            
             #Import only relevant columns
             cNames             <- names((feather::feather_metadata(path = path.f))$type)
             cNames.sub         <- which(as.numeric(substr(x     = cNames,
@@ -1256,7 +1048,7 @@ server <- function(input, output){
             subHUC10[[i]]      <<- tempHUC10
             names(subHUC10)[i] <<- fnames.sub$data.name
           }
-
+          
           output$plot2 <- renderPlot({
             # List of reactive inputs - saves values to list, which can then be fed into plotting functions
             feederList <- list(sample_subHUCs = input$sample_subHUCs,
@@ -1267,7 +1059,7 @@ server <- function(input, output){
             get(input$plot2_select)(feederList. = feederList)
             #METsteps::shinyPlot_HUC_subHUC_Plot(feederList. = feederList)
           })
-
+          
           #Generate PErcentile and ECDF plots
           output$plot3 <- renderPlot({
             # List of reactive inputs - saves values to list, which can then be fed into plotting functions
@@ -1279,7 +1071,7 @@ server <- function(input, output){
             get(input$plot3_select)(feederList. = feederList)
             #METsteps::shinyPlot_HUC_Mean_Percentile_and_ECDF()
           })
-
+          
           #Generate Taylor plots
           # Create checkbox
           output$datasets_for_Taylor <- renderUI({
@@ -1298,7 +1090,7 @@ server <- function(input, output){
               # define colors
               ttColors <<- cbPalette[1:ncol(subToHUC)]
               ttColors <<- ttColors[inOrder]
-
+              
               output$taylorPlotclick <- renderPlot({
                 METsteps::taylor(allData   = allData,
                                  dataNames = colnames(allData),
@@ -1309,11 +1101,10 @@ server <- function(input, output){
               })
             }
           })
-
+          
         }
       }
     }
-    
   })
 }
 

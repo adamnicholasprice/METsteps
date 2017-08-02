@@ -102,6 +102,23 @@ ui <- dashboardPage(
                    label   = "Create Different Map",
                    width   = '87%')
     ),
+    conditionalPanel(
+      condition = "output.plotsCreated",
+      div(style = 'height:3px;',
+          title <- 'Observational Pt Data Controls'),
+      div(style='height:50px;',
+          checkboxInput(inputId = 'aggregateObs',
+                        label = "Aggregate higher res data when available?",
+                        value = FALSE)
+      ),
+      uiOutput(outputId = 'allObsData'),
+      actionButton(inputId = 'mapObs',
+                   label   = "Map observational data",
+                   width   = '87%'),
+      actionButton(inputId = 'rmmapObs',
+                   label   = 'Clear observational data',
+                   width   = '87%')
+    ),
     disable = FALSE
   ),
   #######################################################################
@@ -117,10 +134,10 @@ ui <- dashboardPage(
                      textOutput(outputId    = "textWarning")),
                  leafletOutput(outputId = "mymap"),
                  fluidRow(
-                   column(4, div(style = 'height:10px;',
-                                 checkboxInput(inputId = 'showMarkers',
-                                               label = 'Show available point data',
-                                               value = TRUE))),
+                   # column(4, div(style = 'height:10px;',
+                   #               checkboxInput(inputId = 'showMarkers',
+                   #                             label = 'Show available point data',
+                   #                             value = TRUE))),
                    column(8, uiOutput(outputId = 'highlightCheck'))
                  ),
                  div(style = 'height:1px;',
