@@ -53,6 +53,14 @@ shinyPlot_HUC_Mean_Percentile_and_ECDF   <- function(default. = FALSE,
                             byrow = T),
            heights = c(0.85, 0.15))
     par(mar = c(1, 2, 3.5, 2))
+    # # Subset to drange
+    # subToHUC.y <- subToHUC.[((as.Date(zoo::index(subToHUC.)) >= as.Date(drange[1])) & (as.Date(zoo::index(subToHUC.)) <= as.Date(drange[2]))),]
+    # if (is.null(dim(subToHUC.y))) {
+    #   subToHUC. <- zoo::as.zoo(as.data.frame(subToHUC.y))
+    #   zoo::index(subToHUC.) <- as.Date(zoo::index(subToHUC.y))
+    # }else{
+    #   subToHUC. <- subToHUC.y
+    # }
     # Calculate mean values
     ensembleMeans <- zoo::zoo(rowMeans(subToHUC.))
     zoo::index(ensembleMeans) <- zoo::index(subToHUC.)
@@ -66,7 +74,8 @@ shinyPlot_HUC_Mean_Percentile_and_ECDF   <- function(default. = FALSE,
       list.month <- vector(mode = 'list',
                            length = 12)
       data.vec   <- subToHUC.2[,i]
-      months.all <- lubridate::month((lubridate::date_decimal(index(data.vec)+0.00001)))
+      #months.all <- lubridate::month((lubridate::date_decimal(index(data.vec)+0.00001)))
+      months.all <- lubridate::month(index(data.vec))
       
       for (j in 1:12){
         curmon          <- data.vec[months.all == j]

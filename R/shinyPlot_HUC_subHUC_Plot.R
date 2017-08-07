@@ -50,7 +50,10 @@ shinyPlot_HUC_subHUC_Plot   <- function(default. = FALSE,
     if (is.null(sliderTime.)){
       drange <- NULL
     }else{
-      drange <- lubridate::decimal_date(as.Date(sliderTime.))
+      # drange <- lubridate::decimal_date(as.Date(sliderTime.))
+      drange <- as.Date(ISOdate(year = sliderTime.,
+                                month = c(1,12),
+                                day = c(1,31)))
     }
     plot(x    = 1,
          type = 'n',
@@ -66,7 +69,10 @@ shinyPlot_HUC_subHUC_Plot   <- function(default. = FALSE,
     if (is.null(sliderTime.)){
       drange <- NULL
     } else{
-      drange <- lubridate::decimal_date(as.Date(sliderTime.))
+      #drange <- lubridate::decimal_date(as.Date(sliderTime.))
+      drange <- as.Date(ISOdate(year = sliderTime.,
+                                month = c(1,12),
+                                day = c(1,31)))
     }
     #subset reactive Data by matching the extensions of the list names to the selected HUC level
     data.lineHUCS <<- subHUC10.  #<<<---- might need to go into "return" ---->>>
@@ -103,6 +109,21 @@ shinyPlot_HUC_subHUC_Plot   <- function(default. = FALSE,
                                 mts = subsetMonths.)
       }
     }
+    # Subset zoo object to dates
+    redDate <- function(x, drange){
+      y <- x[((as.Date(zoo::index(x)) >= as.Date(drange[1])) & (as.Date(zoo::index(x)) <= as.Date(drange[2]))),]
+      if (is.null(dim(y))) {
+        x <- zoo::as.zoo(as.data.frame(y))
+        zoo::index(x) <- as.Date(zoo::index(y))
+      }else{
+        x <- y
+      }
+      return(x)
+    }
+    data.lineHUCS <- lapply(X = data.lineHUCS,
+                            FUN = redDate,
+                            drange = drange)
+
     #collect max values from list
     ylmax <- max(unlist(lapply(X = data.lineHUCS,
                                FUN = max,
@@ -129,9 +150,15 @@ shinyPlot_HUC_subHUC_Plot   <- function(default. = FALSE,
                         yaxs = "i",
                         ylab = dataCategory.,
                         xlab = 'Time',
-                        xlim = drange,
+                        #xlim = drange,
                         ylim = c(0, ymaxx)) #input$ylimmax_slider
-                   abline(v   = unique(as.integer(index(subToHUC.))),
+                   # abline(v   = unique(as.integer(index(subToHUC.))),
+                   #        col = ablCol,
+                   #        lty = 2)
+                   yrs <- as.Date(ISOdate(year = unique(lubridate::year(index(subToHUC.))),
+                                          month = 1,
+                                          day = 1))
+                   abline(v   = yrs,
                           col = ablCol,
                           lty = 2)
                    if (length(cols2keep) > 1){

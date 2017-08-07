@@ -23,7 +23,8 @@ shinyPlot_HUC_Seasonal_Decomposition <- function(default.  = FALSE,
   if (is.null(sliderTime.)){
     drange <- NULL
   }else{
-    drange <- lubridate::decimal_date(as.Date(sliderTime.))
+    #drange <- lubridate::decimal_date(as.Date(sliderTime.))
+    drange <- as.Date(sliderTime.)
   }
   
   if (default.){
@@ -100,21 +101,38 @@ shinyPlot_HUC_Seasonal_Decomposition <- function(default.  = FALSE,
       ts_values <- as.numeric(subToHUC.[,i])
       names(listSTL)[i] <- colnames(subToHUC.)[i]
       if(timeStep. =='month'){
+        # ts_monthly <- ts(data      = ts_values,
+        #                  frequency = 12,
+        #                  start     = c(floor(ts_dates[1]), round((ts_dates[1]-floor(ts_dates[1]))*12)+1))
         ts_monthly <- ts(data      = ts_values,
                          frequency = 12,
-                         start     = c(floor(ts_dates[1]), round((ts_dates[1]-floor(ts_dates[1]))*12)+1))}
+                         start     = c(lubridate::year(ts_dates[1]),
+                                       lubridate::month(ts_dates[1])))}
       else if(timeStep. =='day'){
-        ts_monthly <- ts(data      = ts_values,
+        # ts_monthly <- ts(data      = ts_values,
+        #                  frequency = 365,
+        #                  start     = c(floor(ts_dates[1]), round((ts_dates[1]-floor(ts_dates[1]))*365)+1))
+        ts_monthly <- ts(data      = ts_values2,
                          frequency = 365,
-                         start     = c(floor(ts_dates[1]), round((ts_dates[1]-floor(ts_dates[1]))*365)+1))}
+                         start     = c(lubridate::year(ts_dates[1]),
+                                       lubridate::yday(ts_dates[1])))}
       else if(timeStep. =='week'){
+        # ts_monthly <- ts(data      = ts_values,
+        #                  frequency = 52,
+        #                  start     = c(floor(ts_dates[1]),round((ts_dates[1]-floor(ts_dates[1]))*52)+1))
         ts_monthly <- ts(data      = ts_values,
                          frequency = 52,
-                         start     = c(floor(ts_dates[1]),round((ts_dates[1]-floor(ts_dates[1]))*52)+1))}
+                         start     = c(lubridate::year(ts_dates[1]),
+                                       lubridate::week(ts_dates[1])))}
       else if(timeStep. =='year'){
+        # ts_monthly <- ts(data      = ts_values,
+        #                  frequency = 1,
+        #                  start     = c(floor(ts_dates[1]), 1))
         ts_monthly <- ts(data      = ts_values,
                          frequency = 1,
-                         start     = c(floor(ts_dates[1]), 1))}
+                         start     = c(lubridate::year(ts_dates[1]),
+                                       1))
+        }
       else{
         print('Invalid timeStep')
       }
@@ -125,7 +143,10 @@ shinyPlot_HUC_Seasonal_Decomposition <- function(default.  = FALSE,
       decoData <- stl_obj$time.series
       saveData <- cbind(ts_values, decoData)
       colnames(saveData) <- c('data', colnames(decoData))
-      listSTL[[i]] <- saveData
+      #convert to zoo, ts format sucks
+      saveData2 <- as.zoo(saveData)
+      zoo::index(saveData2) <- as.Date(zoo::index(saveData2))
+      listSTL[[i]] <- saveData2
     }
     dataRange <- function(x){
       return(c( ceiling(max(x[,1], na.rm = T)),
@@ -156,7 +177,7 @@ shinyPlot_HUC_Seasonal_Decomposition <- function(default.  = FALSE,
          xaxt = 'n',
          yaxt = 'n',
          xaxs = 'i',
-         xlim = drange)
+         xlim = as.Date(drange))
     mtext(paste('Decomposed Time Series for', paste0(colnames(subToHUC.), collapse = ', ')),
           side = 3,
           line = 1, font = 2)

@@ -4,6 +4,8 @@
 #' calculating a national water budget.
 #' 
 #' @param path.feather Character; Path to folder containing feather files produced through zooHUCtoFeather
+#' @param path.obsMeta Character; Path to metadata file.  Defaults to NULL.
+#' @param path.obs Character; Path to folder containing point data observation files as listed in metadata file.
 #' @export
 #' @return Shiny application
 #' @examples
@@ -58,10 +60,13 @@ exploreShiny <- function(path.feather,
   if (!is.null(path.obsMeta)){
     ptmeta <<- read.csv(file = path.obsMeta,
                         stringsAsFactors = F)
-    ptmeta2 <<- NULL
+    if (colnames(ptmeta)[1] == 'X') ptmeta <<- ptmeta[,-1]
+    timeStep <<- NULL
+    ptmeta.map <<- NULL
+    path.obs <<- path.obs
   }else{
     ptmeta <<- NULL
-    ptmeta2 <<- NULL
+    ptmeta.map <<- NULL
   }
   
   # Check to make sure observational data folder exists
@@ -78,7 +83,34 @@ exploreShiny <- function(path.feather,
 
 #METsteps::exploreShiny(path.feather = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/FeatherFiles', path.obsMeta = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/metadata.csv', path.obs     = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/')
 
+# METsteps::exploreShiny(path.feather = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/FeatherFiles',
+#                        path.obsMeta = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/metadata2.csv',
+#                        path.obs     = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New2/')
+
+# x = read.csv('C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/metadata.csv')
+# NL <- data.frame(OurID = "Recharge_1",
+#                  Lat = 45.5872,
+#                  Lon = -122.702,
+#                  Source = NA,
+#                  SourceID = "01N/01E-09BCB",
+#                  TimeStep = 'year',
+#                  startDate = "2000-01-01",
+#                  endDate = "2009-01-01",
+#                  MeasurementType = "GWAD",
+#                  Units = "mm",
+#                  dataCategory = "Recharge",
+#                  misc = NA)
+# x2 <- rbind(x, NL)
+# write.csv(x2, 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/metadata2_Deleteme.csv')
+# x3 <- read.csv( 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/metadata2_Deleteme.csv',
+#                 stringsAsFactors = F)
+# x3$TimeStep[x3$TimeStep == 'Daily'] <- 'day'
+# x3$TimeStep[x3$TimeStep == 'Monthly'] <- 'month'
 # 
+# write.csv(x3, 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/metadata2_Deleteme.csv',
+#           row.names = FALSE)
+
+
 # 
 # 
 # setwd('C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/FeatherFiles')

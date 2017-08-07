@@ -40,7 +40,10 @@ downscaleHUC10 <- function(HUC10monthly){
   step <- HUC10monthly$info['timeStep']
   
   #---- Time range
-  timeRange <- as.numeric(gsub(pattern     = 'X',
+  # timeRange <- as.numeric(gsub(pattern     = 'X',
+  #                              replacement = '',
+  #                              x           = colnames(HUC10.data)))
+  timeRange <- as.Date(gsub(pattern     = 'X',
                                replacement = '',
                                x           = colnames(HUC10.data)))
   
@@ -69,7 +72,8 @@ downscaleHUC10 <- function(HUC10monthly){
       #                     frequency = 12)
       # HUC.zoo = zoo::as.zoo(HUC.ts)
       HUC.zoo <- as.zoo(t(HUC.conv))
-      index(HUC.zoo) <- as.Date(date_decimal(timeRange))
+      # index(HUC.zoo) <- as.Date(date_decimal(timeRange))
+      zoo::index(HUC.zoo) <- timeRange
       
       assign(paste0('HUC',
                     cur.HUC,
@@ -179,8 +183,9 @@ downscaleHUC10 <- function(HUC10monthly){
       #                     start     = lubridate::year(zoo::yearmon(timeRange[1])),
       #                     frequency = 12)
       # HUC.zoo = zoo::as.zoo(HUC.ts)
-      HUC.zoo <- as.zoo(t(HUC.conv))
-      index(HUC.zoo) <- as.Date(date_decimal(timeRange))
+      HUC.zoo <- zoo::as.zoo(t(HUC.conv))
+      #zoo::index(HUC.zoo) <- as.Date(date_decimal(timeRange))
+      zoo::index(HUC.zoo) <- timeRange
       
       # Add HUC IDs as column names
       colnames(HUC.zoo) <- cur.info

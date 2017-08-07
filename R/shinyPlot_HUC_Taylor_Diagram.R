@@ -19,7 +19,6 @@ shinyPlot_HUC_Taylor_Diagram <- function(default. = FALSE,
       plotrix::taylor.diagram(ref = subToHUC.[,1],
                               model = subToHUC.[,2],
                               col = cbPalette.[2],
-                              pos.cor=FALSE,
                               pcex = 2,
                               mar = c(5,7,5,7))
     }else{
@@ -31,7 +30,6 @@ shinyPlot_HUC_Taylor_Diagram <- function(default. = FALSE,
         plotrix::taylor.diagram(ref = subToHUC.[,1],
                                 model = subToHUC.[,i],
                                 add = TRUE,
-                                pos.cor=FALSE,
                                 col = cbPalette.[i],
                                 pcex = 2)
       }

@@ -99,8 +99,11 @@ aggregateRasterToPolygons <- function(dataPath,
   # verbose = TRUE
   # projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'
   # disag = TRUE
-  #  cl = parallel::makeCluster(5)
-  
+  # disagFactor = NULL
+  # recursive = F
+  #  cl = parallel::makeCluster(15)
+  #  multiNum = NULL
+  # 
   # Libraries
   libs.spatial = c('maptools', 'raster', 'rgdal', 'sp', 'rgeos', 'velox')
   libs.misc = c('progress', 'lubridate', 'pbapply', 'measurements')
@@ -444,8 +447,9 @@ aggregateRasterToPolygons <- function(dataPath,
   
   # Format results
   RESULTS <- do.call(cbind, vxList)
-  d.range <- lubridate::decimal_date(dates.all)
-  colnames(RESULTS) <- d.range #decimal dates
+  #d.range <- lubridate::decimal_date(dates.all)
+  d.range <- dates.all
+  colnames(RESULTS) <- paste0('X', d.range) #decimal dates
   if (MET.HUC10 == TRUE){
     rownames(RESULTS) <- polys@data[['HUC10']] #HUC ids
   }else if (MET.HUC10 == FALSE){
@@ -469,14 +473,15 @@ aggregateRasterToPolygons <- function(dataPath,
   
   
   # Create endDate object
-  endDate <- date_decimal(as.numeric(colnames(RESULTS)[length(colnames(RESULTS))]))
-  endDate <- substr(x = endDate,
-                    start = 1,
-                    stop = regexpr(' ', endDate) - 1)
-  if (nchar(endDate) == 0){
-    endDate <- date_decimal(as.numeric(colnames(RESULTS)[length(colnames(RESULTS))]))
-    endDate <- as.character(endDate)
-  }
+  #endDate <- date_decimal(as.numeric(colnames(RESULTS)[length(colnames(RESULTS))]))
+  endDate <- (gsub('X', '', colnames(RESULTS)[ncol(RESULTS)]))
+  # endDate <- substr(x = endDate,
+  #                   start = 1,
+  #                   stop = regexpr(' ', endDate) - 1)
+  # if (nchar(endDate) == 0){
+  #   endDate <- date_decimal(as.numeric(colnames(RESULTS)[length(colnames(RESULTS))]))
+  #   endDate <- as.character(endDate)
+  # }
   
   # Remove temporary files
   if (exists('projList1')) file.remove(projList1)
