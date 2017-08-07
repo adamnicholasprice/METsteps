@@ -210,12 +210,27 @@ server <- function(input, output){
                         width = '70%',
                         choices = dnames.)
         )
-      }else if (x == "shinyPlot_HUC_Time_Series_and_Difference"){
-        #div(style = 'height:50px;',
-        checkboxInput(inputId = 'showObs',
-                      label = "Show observational data?",
-                      value = TRUE)
-        #)
+      }else if (x %in% c("shinyPlot_HUC_Time_Series_and_Difference")){
+        ht <- 10
+        st <- paste0('height:',ht,'px;')
+        shiny::tagList(
+          div(style=st,
+              checkboxInput(inputId = 'showObs',
+                            label = "Show mean observational data?",
+                            value = FALSE)),
+          div(style=st,
+              checkboxInput(inputId = 'showObs_minmaxEnv',
+                            label = "Show observational min/max envelopes?",
+                            value = TRUE)),
+          div(style=st,
+              checkboxInput(inputId = 'showObs_quantEnv',
+                            label = "Show observational quantile envelopes?",
+                            value = TRUE)),
+          div(style=st,
+              checkboxInput(inputId = 'showObs_InvEnvColors',
+                            label = "Invert background/envelope colors?",
+                            value = FALSE))
+          )
       }
     }
   }
@@ -345,6 +360,7 @@ server <- function(input, output){
       TRUE
     })
     
+    
     # add highlight polygons with obs data checkbox input
     output$highlightCheck <- renderUI({
       div(style = 'height:10px;',
@@ -355,6 +371,8 @@ server <- function(input, output){
     
     # remove 'clickpoly' if it was created earlier
     if (exists('clickpoly')) rm(clickpoly, envir = globalenv())
+    # remove 'ptmeta.source' if it was created earlier
+    if (exists('ptmeta.source')) rm(ptmeta.source, envir = globalenv())
     
     #-------- Define user-selected inputs as independent variables
     # Names of datasets
@@ -1008,6 +1026,9 @@ server <- function(input, output){
     leafletProxy(mapId = 'mymap',
                  data  = inShape) %>%
       clearMarkers()
+    
+    # remove 'ptmeta.source' if it was created earlier
+    if (exists('ptmeta.source')) rm(ptmeta.source, envir = globalenv())
   })
 
   ##### Add/Remove polygon with obs data highlights according to input$showPolysWithObs
@@ -1206,7 +1227,10 @@ server <- function(input, output){
             feederList <- list(sample_subHUCs = input$sample_subHUCs,
                                alpha_slider = input$alpha_slider,
                                slider_time = input$slider_time,
-                               showObs = input$showObs)
+                               showObs = input$showObs,
+                               showObs_minmaxEnv = input$showObs_minmaxEnv,
+                               showObs_quantEnv = input$showObs_quantEnv,
+                               showObs_InvEnvColors = input$showObs_InvEnvColors)
             
             # plotting function
             get(input$plot1_select)(feederList. = feederList)
@@ -1262,7 +1286,10 @@ server <- function(input, output){
             feederList <- list(sample_subHUCs = input$sample_subHUCs,
                                alpha_slider = input$alpha_slider,
                                slider_time = input$slider_time,
-                               showObs = input$showObs)
+                               showObs = input$showObs,
+                               showObs_minmaxEnv = input$showObs_minmaxEnv,
+                               showObs_quantEnv = input$showObs_quantEnv,
+                               showObs_InvEnvColors = input$showObs_InvEnvColors)
             # plotting function
             get(input$plot2_select)(feederList. = feederList)
             #METsteps::shinyPlot_HUC_subHUC_Plot(feederList. = feederList)
@@ -1274,7 +1301,10 @@ server <- function(input, output){
             feederList <- list(sample_subHUCs = input$sample_subHUCs,
                                alpha_slider = input$alpha_slider,
                                slider_time = input$slider_time,
-                               showObs = input$showObs)
+                               showObs = input$showObs,
+                               showObs_minmaxEnv = input$showObs_minmaxEnv,
+                               showObs_quantEnv = input$showObs_quantEnv,
+                               showObs_InvEnvColors = input$showObs_InvEnvColors)
             # plotting function
             get(input$plot3_select)(feederList. = feederList)
             #METsteps::shinyPlot_HUC_Mean_Percentile_and_ECDF()
