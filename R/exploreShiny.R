@@ -83,9 +83,9 @@ exploreShiny <- function(path.feather,
 
 #METsteps::exploreShiny(path.feather = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/FeatherFiles', path.obsMeta = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/metadata.csv', path.obs     = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/')
 
-METsteps::exploreShiny(path.feather = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/FeatherFiles',
-                       path.obsMeta = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/metadata2.csv',
-                       path.obs     = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New2/')
+# METsteps::exploreShiny(path.feather = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/FeatherFiles',
+#                        path.obsMeta = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/metadata2.csv',
+#                        path.obs     = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New2/')
 
 # x = read.csv('C:/Users/ssaxe/Documents/Projects/Model Evaluation/RShiny/PointData/ET/New/metadata.csv')
 # NL <- data.frame(OurID = "Recharge_1",
