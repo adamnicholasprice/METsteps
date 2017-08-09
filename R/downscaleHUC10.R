@@ -40,7 +40,10 @@ downscaleHUC10 <- function(HUC10monthly){
   step <- HUC10monthly$info['timeStep']
   
   #---- Time range
-  timeRange <- as.numeric(gsub(pattern     = 'X',
+  # timeRange <- as.numeric(gsub(pattern     = 'X',
+  #                              replacement = '',
+  #                              x           = colnames(HUC10.data)))
+  timeRange <- as.Date(gsub(pattern     = 'X',
                                replacement = '',
                                x           = colnames(HUC10.data)))
   
@@ -69,7 +72,8 @@ downscaleHUC10 <- function(HUC10monthly){
       #                     frequency = 12)
       # HUC.zoo = zoo::as.zoo(HUC.ts)
       HUC.zoo <- as.zoo(t(HUC.conv))
-      index(HUC.zoo) <- as.Date(date_decimal(timeRange))
+      # index(HUC.zoo) <- as.Date(date_decimal(timeRange))
+      zoo::index(HUC.zoo) <- timeRange
       
       assign(paste0('HUC',
                     cur.HUC,
@@ -158,18 +162,30 @@ downscaleHUC10 <- function(HUC10monthly){
                                FUN = convHUC)
       
       # Reformat data from list to matrix format
-      HUC.conv <- matrix(data  = unlist(out),
-                         byrow = T,
-                         nrow  = length(get(paste0('HUC',cur.HUC,'.info'))),
-                         ncol  = ncol(HUC10.data))
+      #2093 bad
+      if (length(unique(unlist(lapply(out, length)))) == 1){
+        HUC.conv <- matrix(data  = unlist(out),
+                           byrow = T,
+                           nrow  = length(get(paste0('HUC',cur.HUC,'.info'))),
+                           ncol  = ncol(HUC10.data))
+      }else{
+        HUC.conv <- matrix(data = NA,
+                           nrow = length(get(paste0('HUC',cur.HUC,'.info'))),
+                           ncol = ncol(HUC10.data))
+        for (i in 1:nrow(HUC.conv)){
+          HUC.conv[i,] = out[[i]]
+        }
+      }
+      
       
       # Convert matrix to timeseries zoo object
       # HUC.ts <- stats::ts(data      = t(HUC.conv),
       #                     start     = lubridate::year(zoo::yearmon(timeRange[1])),
       #                     frequency = 12)
       # HUC.zoo = zoo::as.zoo(HUC.ts)
-      HUC.zoo <- as.zoo(t(HUC.conv))
-      index(HUC.zoo) <- as.Date(date_decimal(timeRange))
+      HUC.zoo <- zoo::as.zoo(t(HUC.conv))
+      #zoo::index(HUC.zoo) <- as.Date(date_decimal(timeRange))
+      zoo::index(HUC.zoo) <- timeRange
       
       # Add HUC IDs as column names
       colnames(HUC.zoo) <- cur.info

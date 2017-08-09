@@ -7,7 +7,8 @@ ui <- dashboardPage(
   dashboardSidebar(
     conditionalPanel(
       condition = "output.plotsCreated == false",
-      title <- "Input Controls",
+      div(style = 'height:10px',
+        title <- "Input Controls"),
       div(style='height:60px;',
           selectInput(inputId  = 'category_select',
                       label    = 'Component',
@@ -24,7 +25,8 @@ ui <- dashboardPage(
                       label    = 'Map HUC level',
                       choices  = list('HUC 2' = 2, 'HUC 4' = 4, 'HUC 6' = 6, 'HUC 8' = 8),
                       selected = 2)),
-      div(style='height:60px;',
+      uiOutput(outputId = 'trangeUI'),
+      div(style='height:55px;',
           uiOutput(outputId = "stats_available")),
       div(style='height:50px;',
           checkboxInput(inputId = 'colorCheckBox',
@@ -50,7 +52,7 @@ ui <- dashboardPage(
             tags$label("high", `for` = "maxCol"), 
             tags$input(id = "maxCol", type = "text", value = '', class = 'input-small'))
       ),
-      div(style='height:60px;',
+      div(style='height:50px;',
           radioButtons(inputId = 'subset_Option',
                        label = 'Subset Option',
                        choices = list('Season' = TRUE,
@@ -100,6 +102,23 @@ ui <- dashboardPage(
                    label   = "Create Different Map",
                    width   = '87%')
     ),
+    conditionalPanel(
+      condition = "output.plotsCreated",
+      div(style = 'height:3px;',
+          title <- 'Observational Pt Data Controls'),
+      div(style='height:50px;',
+          checkboxInput(inputId = 'aggregateObs',
+                        label = "Aggregate higher res data when available?",
+                        value = FALSE)
+      ),
+      uiOutput(outputId = 'allObsData'),
+      actionButton(inputId = 'mapObs',
+                   label   = "Map observational data",
+                   width   = '87%'),
+      actionButton(inputId = 'rmmapObs',
+                   label   = 'Clear observational data',
+                   width   = '87%')
+    ),
     disable = FALSE
   ),
   #######################################################################
@@ -114,6 +133,13 @@ ui <- dashboardPage(
                  div(style = 'color:red;',
                      textOutput(outputId    = "textWarning")),
                  leafletOutput(outputId = "mymap"),
+                 fluidRow(
+                   # column(4, div(style = 'height:10px;',
+                   #               checkboxInput(inputId = 'showMarkers',
+                   #                             label = 'Show available point data',
+                   #                             value = TRUE))),
+                   column(8, uiOutput(outputId = 'highlightCheck'))
+                 ),
                  div(style = 'height:1px;',
                      tags$hr()),
                  fluidRow(

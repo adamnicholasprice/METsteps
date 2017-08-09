@@ -10,7 +10,7 @@
 
 extractMetadata <- function(METname, df = TRUE){
   if (length(METname >= 1) && (sum(is.na(METname)) == 0)){
-    info <- strsplit(x     = METname,
+    info <- strsplit(x     = basename(METname),
                      split  = '_',
                      fixed  = T)
     nameItandFixIt <- function(x){

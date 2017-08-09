@@ -34,12 +34,15 @@
 #' @param cl Cluster object, optional; If supplied, extraction run in parallels.  Suggested max number of cores is 10.
 #' @param disag Logical; Allow resampling if necessary.  Defaults to TRUE.  Resampling occurs when (average cell size of dataset) x
 #' 4 > average size of polygons in shapefile.
+#' @param disagFactor Integer; Disaggregation factor (> 1 disaggregates).  If NULL, automatically selects factor.  Defaults to NULL.
 #' @param cancelReproject Logical; If FALSE, reprojection is forced if necessary.  Set to TRUE to disable raster reprojection.
 #' Defaults to FALSE. Suggested for use when WGS84 is projection and extents align with included datasets (polyHUC2 for example).
 #' @param recursive Logical; Should the listing recurse into directories? Defaults to TRUE.
 #' @param projManual Character, optional; Projection for datasets to be converted to.  Gridded data and shapefile projections will be
 #' transformed to projManual as necessary. For CONUS projects, suggested to leave at default. Defaults to NAD83 
 #' ('+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0').
+#' @param multiNum Numeric, optional; If you would like the results to be multiplied by a certain value, put it in here. Must be 
+#' numeric.  Defaults to NULL.
 #' @export
 #' @return Table of mean raster values for each gridded dataset layer.  Columns are gridded layers, rows are shapefile
 #' features.
@@ -64,9 +67,11 @@ aggregateRasterToPolygons <- function(dataPath,
                                 verbose = TRUE,
                                 cl = NULL,
                                 disag = TRUE,
+                                disagFactor = NULL,
                                 cancelReproject = FALSE,
                                 recursive = TRUE,
-                                projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'){
+                                projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0',
+                                multiNum = NULL){
   
   # dataPath = "C:/Users/ssaxe/Documents/Scripts/R Scripts/Model Evaluation Tool/raster/AET/SSEBopMonthly"
   # dataName = 'MOD16-A2'
@@ -94,8 +99,11 @@ aggregateRasterToPolygons <- function(dataPath,
   # verbose = TRUE
   # projManual = '+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0'
   # disag = TRUE
-  #  cl = parallel::makeCluster(5)
-  
+  # disagFactor = NULL
+  # recursive = F
+  #  cl = parallel::makeCluster(15)
+  #  multiNum = NULL
+  # 
   # Libraries
   libs.spatial = c('maptools', 'raster', 'rgdal', 'sp', 'rgeos', 'velox')
   libs.misc = c('progress', 'lubridate', 'pbapply', 'measurements')
@@ -121,7 +129,8 @@ aggregateRasterToPolygons <- function(dataPath,
     is.numeric(cushion),
     is.logical(verbose),
     is.logical(disag),
-    is.character(projManual)
+    is.character(projManual),
+    (is.null(multiNum) || is.numeric(multiNum))
   )
   if (MET.HUC10 == FALSE){
     stopifnot(
@@ -159,7 +168,7 @@ aggregateRasterToPolygons <- function(dataPath,
         stop('polyIDs not found as column name in shapefile')
       }
     } else if (length(polyIDs) > 1){
-      if (length(polyIDs != nrow(polys@data))){
+      if (length(polyIDs) != nrow(polys@data)){
         stop('length(polyIDs) != number of shapefile features')
       }
     }
@@ -330,6 +339,7 @@ aggregateRasterToPolygons <- function(dataPath,
     }else{
       resFact <- 1
     }
+    if (!is.null(disagFactor)) resFact <- disagFactor
   }else{
     resFact <- 1
   }
@@ -404,7 +414,8 @@ aggregateRasterToPolygons <- function(dataPath,
   }
   
   if (verbose && resFact == 1) writeLines('Extracting at polygons')
-  if (verbose && resFact != 1) writeLines('Extracting at polygons and disaggregating to ~4 cells/polygon')
+  if (verbose && resFact != 1) writeLines(paste('Extracting at polygons and disaggregating to ~4 cells/polygon (disaggregation factor =',
+                                                resFact, ')'))
   # vxList <- pblapply(X           = splitRas,
   #                    FUN         = applyVxExtract,
   #                    sp          = polys,
@@ -420,10 +431,25 @@ aggregateRasterToPolygons <- function(dataPath,
                               cl          = cl)
   gc()
   
+  # delete this junk
+  # plot(shp3[is.na(RESULTS[,1]),])
+  # gageRem <- (shp3[is.na(RESULTS[,1]),])@data$GAGE_ID
+  # write.csv(gageRem, 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/ByWatershed/Shapefiles/RemoveFromCONUS_WGS84.csv')
+  # 
+  # gagesToEliminate = (shp2@data$GAGE_ID)[!is.na(RESULTS[,1])]
+  # shp3 = shp2[(as.numeric(shp2@data$GAGE_ID) %in% as.numeric(gagesToEliminate)), ]
+  # writeOGR(shp3,
+  #          dsn = 'C:/Users/ssaxe/Documents/Projects/Model Evaluation/ByWatershed/Shapefiles/bas_ref_CONUS_WGS84.shp',
+  #          layer = 'bas_ref_CONUS_WGS84',
+  #          driver = 'ESRI Shapefile')
+  # 
+  
+  
   # Format results
   RESULTS <- do.call(cbind, vxList)
-  d.range <- lubridate::decimal_date(dates.all)
-  colnames(RESULTS) <- d.range #decimal dates
+  #d.range <- lubridate::decimal_date(dates.all)
+  d.range <- dates.all
+  colnames(RESULTS) <- paste0('X', d.range) #decimal dates
   if (MET.HUC10 == TRUE){
     rownames(RESULTS) <- polys@data[['HUC10']] #HUC ids
   }else if (MET.HUC10 == FALSE){
@@ -439,12 +465,23 @@ aggregateRasterToPolygons <- function(dataPath,
   RESULTS <- RESULTS * measurements::conv_unit(x    = 1,
                                                  from = unitDepth,
                                                  to   = 'mm')
+  # Multiplier
+  if (!is.null(multiNum)){
+    
+    RESULTS <- RESULTS * multiNum
+  }
+  
   
   # Create endDate object
-  endDate <- date_decimal(as.numeric(colnames(RESULTS)[length(colnames(RESULTS))]))
-  endDate <- substr(x = endDate,
-                    start = 1,
-                    stop = regexpr(' ', endDate) - 1)
+  #endDate <- date_decimal(as.numeric(colnames(RESULTS)[length(colnames(RESULTS))]))
+  endDate <- (gsub('X', '', colnames(RESULTS)[ncol(RESULTS)]))
+  # endDate <- substr(x = endDate,
+  #                   start = 1,
+  #                   stop = regexpr(' ', endDate) - 1)
+  # if (nchar(endDate) == 0){
+  #   endDate <- date_decimal(as.numeric(colnames(RESULTS)[length(colnames(RESULTS))]))
+  #   endDate <- as.character(endDate)
+  # }
   
   # Remove temporary files
   if (exists('projList1')) file.remove(projList1)

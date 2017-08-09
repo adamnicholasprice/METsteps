@@ -4,10 +4,14 @@
 \alias{exploreShiny}
 \title{Shiny Application for Exploring Processed Datasets}
 \usage{
-exploreShiny(path.feather)
+exploreShiny(path.feather, path.obsMeta = NULL, path.obs = NULL)
 }
 \arguments{
 \item{path.feather}{Character; Path to folder containing feather files produced through zooHUCtoFeather}
+
+\item{path.obsMeta}{Character; Path to metadata file.  Defaults to NULL.}
+
+\item{path.obs}{Character; Path to folder containing point data observation files as listed in metadata file.}
 }
 \value{
 Shiny application
