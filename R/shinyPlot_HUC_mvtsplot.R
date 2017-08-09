@@ -7,14 +7,16 @@
 #' @examples
 #' shinyPlot_HUC_mvts(x)
 
-shinyPlot_HUC_mvtsplot<- function(x = subToHUC){
+shinyPlot_HUC_mvtsplot<- function(x=subToHUC,
+                                  ...){
   require(mvtsplot)
-  mvtsplot::mvtsplot(subToHUC, 
+  require(RColorBrewer)
+  mvtsplot::mvtsplot(x, 
                      palette = 'Set3', 
                      xtime = index(subToHUC), 
                      main ="MVTS Plot",
                      sort = 'max',
                      rowstat = 'sd',
-                     group = c(1:ncol(allData)),
+                     group = c(1:ncol(subToHUC)),
                      gcol ='black')
 }
