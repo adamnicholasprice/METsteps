@@ -2,11 +2,11 @@
 #'
 #' For use in Shiny server. This function returns information about each of the function names provided
 #' in a dataframe.  Function names should be of the format "shinyFun_one_FunctionName",
-#' "shinyFun_two_FunctionName", "shinyFun_poly_FunctionName", where "one", "two", and "poly" tell the app 
-#' how many input datasets the function can handle. If function can handle two or more, copy/paste function 
-#' with new names.  "FunctionName" is the name of the function as it will appear in the Shiny interface. 
+#' "shinyFun_two_FunctionName", "shinyFun_poly_FunctionName", where "one", "two", and "poly" tell the app
+#' how many input datasets the function can handle. If function can handle two or more, copy/paste function
+#' with new names.  "FunctionName" is the name of the function as it will appear in the Shiny interface.
 #' Any underscores after c("one", "two", "poly") will be converted to spaces.
-#' @param numD Character, optional; If set to one of c('one', 'two', 'poly'), returns a list of functions for 
+#' @param numD Character, optional; If set to one of c('one', 'two', 'poly'), returns a list of functions for
 #' that number of input datasets names with formal names ("FunctionName").  If set to NULL, returns dataframe
 #' of all 'shinyFun_' functions. Defaults to NULL.
 #' @param pkg Character; Which package to look in for function names?  Defaults to "METsteps".
@@ -61,6 +61,26 @@ shinyFun_one_Mean   <- function(x){
   return(mean(x))
 }
 
+#' Lapply version of mean
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+
+shinyFun_two_Mean   <- function(x){
+  return(mean(x))
+}
+
+#' Lapply version of mean
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_poly_Mean   <- function(x){
+  return(mean(x))
+}
+
+
 #' Lapply version of NSE
 #'
 #' For use in Shiny app
@@ -81,7 +101,7 @@ shinyFun_two_NSE   <- function(x){
 #' @return Numeric vector.
 shinyFun_two_RMSE  <- function(x){
   require(hydroGOF)
-  return(rmse(sim   = x[, 1], 
+  return(rmse(sim   = x[, 1],
               obs   = x[, 2],
               na.rm = T))
 }
@@ -228,26 +248,165 @@ shinyFun_poly_CV    <- function(z){
                     na.rm  = T)))
 }
 
-#' Lapply Version of Coefficient of Variation
+#' Max Value of HUC for selected models
 #'
 #' For use in Shiny app
 #' @export
 #' @return Numeric vector.
+shinyFun_poly_Max <- function(x){
+  max(x)
+}
 
-shinyFUN_one_SLOPE <- function(x = subToHUC, alpha = 0.05, insigValue = NA){
-  #where x is a single regular time-series dataset
-  len <<- (1:length(x[,1]))
-  mod <<- lm(len~x[,1])
-  cfs <<- (summary(mod))$coefficients
-  slope <<- cfs[2,1]
-  Pr <<- cfs[2,4]
-  
-  # if the p-value (Pr) is less than alpha (standard is to use 0.05) then slope value is not significant and return a 0
-  # could maybe also return NA?
-  if (Pr < alpha){
-    return(slope)
-  }else{
-    return(insigValue)
-        }
-    }
+#' Max Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_two_Max <- function(x){
+  max(x)
+}
+
+#' Max Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_one_Max <- function(x){
+  max(x)
+}
+
+#' Min Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_poly_Min <- function(x){
+  min(x)
+}
+
+#' Min Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_one_Min <- function(x){
+  min(x)
+}
+
+#' Min Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_two_Min <- function(x){
+  min(x)
+}
+
+#' 10th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_one_10th <- function(x){
+  return(quantile(x,.10))
+}
+
+#' 10th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_two_10th <- function(x){
+  return(quantile(x,.10))
+}
+
+#' 10th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_poly_10th <- function(x){
+  return(quantile(x,.10))
+}
+
+#' 25th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_one_25th <- function(x){
+  return(quantile(x,.25))
+}
+
+#' 25th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_two_25th <- function(x){
+  return(quantile(x,.25))
+}
+
+#' 25th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_poly_25th <- function(x){
+  return(quantile(x,.25))
+}
+
+#' 75th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_one_75th <- function(x){
+  return(quantile(x,.75))
+}
+
+#' 75th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_two_75th <- function(x){
+  return(quantile(x,.75))
+}
+
+#' 75th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_poly_75th <- function(x){
+  return(quantile(x,.75))
+}
+
+#' 90th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_one_90th <- function(x){
+  return(quantile(x,.9))
+}
+
+#' 90th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_two_90th <- function(x){
+  return(quantile(x,.9))
+}
+
+#' 90th Percentile Value of HUC for selected models
+#'
+#' For use in Shiny app
+#' @export
+#' @return Numeric vector.
+shinyFun_poly_90th <- function(x){
+  return(quantile(x,.9))
+}
 
