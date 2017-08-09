@@ -20,6 +20,7 @@ shinyPlot_HUC_Taylor_Diagram <- function(default. = FALSE,
                               model = subToHUC.[,2],
                               col = cbPalette.[2],
                               pcex = 2,
+                              pos.cor = FALSE,
                               mar = c(5,7,5,7))
     }else{
       frame()
@@ -31,6 +32,7 @@ shinyPlot_HUC_Taylor_Diagram <- function(default. = FALSE,
                                 model = subToHUC.[,i],
                                 add = TRUE,
                                 col = cbPalette.[i],
+                                pos.cor = FALSE,
                                 pcex = 2)
       }
     }
